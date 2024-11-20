@@ -80,7 +80,7 @@
   ;; One Env can store multiple databases (e.g. - sorted maps)
   (def env ^Env (-> (Env/create)
                ;; LMDB needs to know how large our DB may become. Over-estimating is OK
-               ;; This setst the map size in bytes
+               ;; This sets the map size in bytes
                     (.setMapSize map-size)
                ;; LMDB needs to know how many DBs (Dbi) we want to store in this Env
                     (.setMaxDbs dbs)

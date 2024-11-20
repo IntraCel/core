@@ -1,0 +1,43 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.17 Chrome/128.0.6613.36 Electron/32.0.1 Safari/537.36" version="24.7.17">
+  <diagram name="Page-1" id="2YBvvXClWsGukQMizWep">
+    <mxGraphModel dx="1434" dy="1825" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-3" value="(kv-store/start dir env-opts)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" vertex="1" parent="1">
+          <mxGeometry x="380" y="120" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-4" value="set JAVA_OPTS to:&lt;div&gt;--add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="70" y="60" width="310" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-5" value="(kv-store/open-db db-env db-name key-serde val-serde db-opts)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#647687;fontColor=#ffffff;strokeColor=#314354;" vertex="1" parent="1">
+          <mxGeometry x="530" y="180" width="350" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-6" value="(kv-store/put db key val)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" vertex="1" parent="1">
+          <mxGeometry x="880" y="240" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-7" value="(kv-store/set-pre-get-hook pre-fn)&lt;br&gt;&amp;lt;optional&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="880" y="310" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-8" value="(kv-store/get db key" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" vertex="1" parent="1">
+          <mxGeometry x="880" y="380" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-9" value="(kv-store/exec-pre-get)&lt;br&gt;&amp;lt;if pre-get-hook fn set&lt;br&gt;use output as the key for kv-store/get)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="440" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-10" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;pre-hook-fn&lt;/h1&gt;&lt;p&gt;The set-pre-get-hook function allows the user to set a function that accepts the and the db component.&amp;nbsp;&lt;/p&gt;&lt;p&gt;This allows the user to do any preprocessing of the key they desire. For instance, perhaps an IP address is being used as the key and the pre-hook-fn wants to see if it belongs to a CIDR.&lt;/p&gt;&lt;p&gt;This could distill multiple addresses into a single hash that represents all of them to save space.&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;glass=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="215" width="170" height="289" as="geometry" />
+        </mxCell>
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.014;entryY=0.43;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="fAg5fc2q9PFFwsIl9vwl-7" target="fAg5fc2q9PFFwsIl9vwl-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-12" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Important!&lt;/h1&gt;&lt;p&gt;If the JAVA_OPTS aren&#39;t set, the kv-store will fail to start up!&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;glass=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="-40" width="180" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=-0.004;entryY=0.577;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="fAg5fc2q9PFFwsIl9vwl-4" target="fAg5fc2q9PFFwsIl9vwl-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
