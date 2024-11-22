@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.17 Chrome/128.0.6613.36 Electron/32.0.1 Safari/537.36" version="24.7.17">
   <diagram name="Page-1" id="2YBvvXClWsGukQMizWep">
-    <mxGraphModel dx="1434" dy="1825" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1114" dy="1825" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -22,7 +22,7 @@
         <mxCell id="fAg5fc2q9PFFwsIl9vwl-8" value="(kv-store/get db key" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" parent="1" vertex="1">
           <mxGeometry x="880" y="517" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="fAg5fc2q9PFFwsIl9vwl-9" value="(kv-store/exec-pre-get)&lt;br&gt;&amp;lt;if pre-get-hook fn set&lt;br&gt;use output as the key for kv-store/get)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-9" value="(kv-store/exec-pre-get)&lt;br&gt;&amp;lt;if pre-get-hook fn set&lt;br&gt;use output as the key for kv-store/get&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
           <mxGeometry x="1000" y="577" width="190" height="60" as="geometry" />
         </mxCell>
         <mxCell id="fAg5fc2q9PFFwsIl9vwl-10" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;set-pre-hook-fn&lt;/h1&gt;&lt;p&gt;The set-pre-get-hook function allows the user to set a function that accepts the and the db component.&amp;nbsp;&lt;/p&gt;&lt;p&gt;This allows the user to do any preprocessing of the key they desire. For instance, perhaps an IP address is being used as the key and the pre-hook-fn wants to see if it belongs to a CIDR.&lt;/p&gt;&lt;p&gt;This could distill multiple addresses into a single hash that represents all of them to save space.&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;glass=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
@@ -37,20 +37,23 @@
         <mxCell id="fAg5fc2q9PFFwsIl9vwl-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=-0.004;entryY=0.577;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="fAg5fc2q9PFFwsIl9vwl-4" target="fAg5fc2q9PFFwsIl9vwl-12" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="GHuxgc0jcfwjU8vEZa1Y-1" target="GHuxgc0jcfwjU8vEZa1Y-2">
+        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="GHuxgc0jcfwjU8vEZa1Y-1" target="GHuxgc0jcfwjU8vEZa1Y-2" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-1" value="(kv-store/set-key-serde)&lt;br&gt;&amp;lt;optional - defaults to string&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-1" value="(kv-store/set-key-serde)&lt;br&gt;&amp;lt;optional - defaults to string&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
           <mxGeometry x="880" y="240" width="190" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-2" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;set-(key/val)-serde&lt;/h1&gt;&lt;p&gt;The KV-Store stores keys and values as a ByteBuffers which are fast but not easy to work with. These can be customized to convert output to a custom implementation of the defprotocol KVSerde.&lt;/p&gt;&lt;p&gt;JSON, Avro, Arrow, totally up to you. Just implement the serialize and deserialize functions from the protocol to return the desired data type.&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;glass=1;" vertex="1" parent="1">
-          <mxGeometry x="1200" y="160" width="190" height="270" as="geometry" />
+        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-2" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;set-(key/val)-serde&lt;/h1&gt;&lt;p&gt;The KV-Store stores keys and values as a ByteBuffers which are fast but not easy to work with. These can be customized to convert output to a custom implementation of the defprotocol KVSerde.&lt;/p&gt;&lt;p&gt;JSON, Avro, Arrow, totally up to you. Just implement the serialize and deserialize functions from the protocol to return the desired data type or use the built-in KVSerdes in IntraCel.&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;glass=1;" parent="1" vertex="1">
+          <mxGeometry x="1200" y="160" width="190" height="280" as="geometry" />
         </mxCell>
-        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="GHuxgc0jcfwjU8vEZa1Y-3" target="GHuxgc0jcfwjU8vEZa1Y-2">
+        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="GHuxgc0jcfwjU8vEZa1Y-3" target="GHuxgc0jcfwjU8vEZa1Y-2" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-3" value="(kv-store/set-val-serde)&lt;br&gt;&amp;lt;optional - defaults to string&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-3" value="(kv-store/set-val-serde)&lt;br&gt;&amp;lt;optional - defaults to string&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
           <mxGeometry x="880" y="310" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Ujb1NnF9qX_84pnPX4YR-1" value="(kv-store/delete db key" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" vertex="1" parent="1">
+          <mxGeometry x="880" y="645" width="140" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
