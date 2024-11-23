@@ -4,20 +4,20 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="fAg5fc2q9PFFwsIl9vwl-3" value="(kv-store/start dir env-opts)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" parent="1" vertex="1">
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-3" value="(kv-store/start dir ctx-opts)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" parent="1" vertex="1">
           <mxGeometry x="380" y="120" width="150" height="60" as="geometry" />
         </mxCell>
         <mxCell id="fAg5fc2q9PFFwsIl9vwl-4" value="set JAVA_OPTS to:&lt;div&gt;--add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
           <mxGeometry x="70" y="60" width="310" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="fAg5fc2q9PFFwsIl9vwl-5" value="(kv-store/open-db db-env db-name key-serde val-serde db-opts)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#647687;fontColor=#ffffff;strokeColor=#314354;" parent="1" vertex="1">
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-5" value="(kv-store/open-db db-ctx db-name key-serde val-serde db-opts)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#647687;fontColor=#ffffff;strokeColor=#314354;" parent="1" vertex="1">
           <mxGeometry x="530" y="180" width="350" height="60" as="geometry" />
         </mxCell>
         <mxCell id="fAg5fc2q9PFFwsIl9vwl-6" value="(kv-store/put db key val)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" parent="1" vertex="1">
           <mxGeometry x="880" y="377" width="180" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="fAg5fc2q9PFFwsIl9vwl-7" value="(kv-store/set-pre-get-hook pre-fn)&lt;br&gt;&amp;lt;optional&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
-          <mxGeometry x="880" y="447" width="190" height="60" as="geometry" />
+        <mxCell id="fAg5fc2q9PFFwsIl9vwl-7" value="(kv-store/set-pre-get-hook db pre-fn)&lt;br&gt;&amp;lt;optional&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="880" y="447" width="230" height="60" as="geometry" />
         </mxCell>
         <mxCell id="fAg5fc2q9PFFwsIl9vwl-8" value="(kv-store/get db key" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" parent="1" vertex="1">
           <mxGeometry x="880" y="517" width="120" height="60" as="geometry" />
@@ -40,8 +40,8 @@
         <mxCell id="GHuxgc0jcfwjU8vEZa1Y-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="GHuxgc0jcfwjU8vEZa1Y-1" target="GHuxgc0jcfwjU8vEZa1Y-2" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-1" value="(kv-store/set-key-serde)&lt;br&gt;&amp;lt;optional - defaults to string&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
-          <mxGeometry x="880" y="240" width="190" height="60" as="geometry" />
+        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-1" value="(kv-store/set-key-serde db key-serde)&lt;br&gt;&amp;lt;optional - defaults to string&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="880" y="240" width="230" height="60" as="geometry" />
         </mxCell>
         <mxCell id="GHuxgc0jcfwjU8vEZa1Y-2" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;set-(key/val)-serde&lt;/h1&gt;&lt;p&gt;The KV-Store stores keys and values as a ByteBuffers which are fast but not easy to work with. These can be customized to convert output to a custom implementation of the defprotocol KVSerde.&lt;/p&gt;&lt;p&gt;JSON, Avro, Arrow, totally up to you. Just implement the serialize and deserialize functions from the protocol to return the desired data type or use the built-in KVSerdes in IntraCel.&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;glass=1;" parent="1" vertex="1">
           <mxGeometry x="1200" y="160" width="190" height="280" as="geometry" />
@@ -49,10 +49,10 @@
         <mxCell id="GHuxgc0jcfwjU8vEZa1Y-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="GHuxgc0jcfwjU8vEZa1Y-3" target="GHuxgc0jcfwjU8vEZa1Y-2" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-3" value="(kv-store/set-val-serde)&lt;br&gt;&amp;lt;optional - defaults to string&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
-          <mxGeometry x="880" y="310" width="190" height="60" as="geometry" />
+        <mxCell id="GHuxgc0jcfwjU8vEZa1Y-3" value="(kv-store/set-val-serde db val-serde)&lt;br&gt;&amp;lt;optional - defaults to string&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="880" y="310" width="230" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="Ujb1NnF9qX_84pnPX4YR-1" value="(kv-store/delete db key" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" vertex="1" parent="1">
+        <mxCell id="Ujb1NnF9qX_84pnPX4YR-1" value="(kv-store/delete db key" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" parent="1" vertex="1">
           <mxGeometry x="880" y="645" width="140" height="60" as="geometry" />
         </mxCell>
       </root>
