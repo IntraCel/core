@@ -1,9 +1,10 @@
 {:aliases  {:dev {:extra-paths ["development/src"]
 
-                  :extra-deps {org.clojure/clojure     {:mvn/version "1.12.0"}
-                               poly-intracel/api       {:local/root "components/api"}
-                               poly-intracel/kv-store  {:local/root "components/kv-store"}
-                               poly-intracel/serde     {:local/root "components/serde"}}}
+                  :extra-deps {org.clojure/clojure        {:mvn/version "1.12.0"}
+                               com.stuartsierra/component {:mvn/version "1.1.0"}
+                               poly-intracel/api          {:local/root "components/api"}
+                               poly-intracel/kv-store     {:local/root "components/kv-store"}
+                               poly-intracel/serde        {:local/root "components/serde"}}}
 
             :test {:extra-paths ["components/api/test"
                                  "components/kv-store/test"

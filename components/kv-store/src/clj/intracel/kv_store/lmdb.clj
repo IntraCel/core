@@ -1,5 +1,7 @@
 (ns clj.intracel.kv-store.lmdb
-  (:require [clojure.java.io :as io])
+  (:require [clj.intracel.api.kv-store :as kvs-api]
+            [clojure.java.io :as io]
+            [com.stuartsierra.component :as component])
   (:import [java.io File]
            [java.nio ByteBuffer]
            [java.nio.charset StandardCharsets]
@@ -22,6 +24,14 @@
 ;; with high load."
 
 (def UTF_8 StandardCharsets/UTF_8)
+
+(defrecord LmdbRec [kvs-ctx pre-fn]
+  component/Lifecycle 
+  (start [this])
+  (stop [this])
+  
+  kvs-api/KVStoreDb 
+  )
 (comment
   (def path (io/file (str (System/getProperty "java.io.tmpdir") "/lmdb/")))
   (.mkdirs path)

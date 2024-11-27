@@ -1,5 +1,5 @@
 (ns clj.intracel.api.kv-store
-  "The clj.intracel.api.kv-store namespace defines the types and behaviors of the IntraCel KV-Store 
+  "The `clj.intracel.api.kv-store` namespace defines the types and behaviors of the IntraCel KV-Store 
    for managing Key/Value pairs in a high-speed embedded database.  The KV-Store has operations 
    similar to a map with get and put functions. However, the KV-Store is persistent and can survive
    a restart of the application.
@@ -145,7 +145,7 @@
     Returns:
     This is a void operation.")
   (get [kvs-db key]
-    "Puts a value into the KV-Store. If a value the same key exists, it will be replaced with the value argument provided.
+    "Gets a value from the KV-Store. If set, the `pre-get-hook` fn will be called on the key provided.
 
     Depends on: [[db]] 
     | Parameter   | Description |
@@ -177,5 +177,16 @@
   | ------------|-------------|
   | `kvs-db`    | A reference to the `clj.intracel.api.kv-store/KVStoreDbContext` created in the [[db]] function. |
   | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). ||
+  Returns:
+  A map containing the key `deleted?` set to true or false. If false, use the `msg` key to check the error message."
+  [kvs-db key key-serde]
+  "Removes a key and its corresponding value from the KV-Store using the provided KVSerde. 
+  
+  Depends on: [[db]] 
+  | Parameter   | Description |
+  | ------------|-------------|
+  | `kvs-db`    | A reference to the `clj.intracel.api.kv-store/KVStoreDbContext` created in the [[db]] function. |
+  | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
+  | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]||
   Returns:
   A map containing the key `deleted?` set to true or false. If false, use the `msg` key to check the error message."))
