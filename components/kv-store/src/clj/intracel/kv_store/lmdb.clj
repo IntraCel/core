@@ -25,7 +25,7 @@
 
 (def UTF_8 StandardCharsets/UTF_8)
 
-(deftype LmdbRec [kvs-ctx pre-fn]
+(defrecord LmdbRec [kvs-ctx pre-fn]
   component/Lifecycle 
   (start [this])
   (stop [this])
@@ -52,7 +52,9 @@
   (kv-del [kvs-db key key-serde])
   )
 
-(defn create-env-context [env-opts])
+(defn create-kv-store-context [env-opts])
+
+(defn db [kvs-ctx db-name db-opts])
 
 (comment
   (def path (io/file (str (System/getProperty "java.io.tmpdir") "/lmdb/")))
