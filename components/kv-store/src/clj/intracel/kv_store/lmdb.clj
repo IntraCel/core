@@ -1,5 +1,5 @@
 (ns clj.intracel.kv-store.lmdb
-  (:require [clj.intracel.api.kv-store :as kvs-api]
+  (:require [clj.intracel.api.interface.protocols :as proto]
             [clojure.java.io :as io]
             [com.stuartsierra.component :as component])
   (:import [java.io File]
@@ -25,13 +25,35 @@
 
 (def UTF_8 StandardCharsets/UTF_8)
 
-(defrecord LmdbRec [kvs-ctx pre-fn]
+(deftype LmdbRec [kvs-ctx pre-fn]
   component/Lifecycle 
   (start [this])
   (stop [this])
   
-  kvs-api/KVStoreDb 
+  proto/KVStoreDb 
+  (db [kvs-ctx db-name db-opts])
+  
+  (set-key-serde [kvs-db key-serde])
+  
+  (set-val-serde [kvs-db val-serde])
+
+  (kv-put [kvs-db key value])
+  
+  (kv-put [kvs-db key value key-serde val-serde])
+
+  (set-pre-get-hook [kvs-db pre-fn])
+
+  (kv-get [kvs-db key])
+
+  (kv-get [kvs-db key key-serde val-serde])
+
+  (kv-del [kvs-db key])
+
+  (kv-del [kvs-db key key-serde])
   )
+
+(defn create-env-context [env-opts])
+
 (comment
   (def path (io/file (str (System/getProperty "java.io.tmpdir") "/lmdb/")))
   (.mkdirs path)

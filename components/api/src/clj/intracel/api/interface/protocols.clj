@@ -1,25 +1,6 @@
-(ns clj.intracel.api.kv-store
-  "The `clj.intracel.api.kv-store` namespace defines the types and behaviors of the IntraCel KV-Store 
-   for managing Key/Value pairs in a high-speed embedded database.  The KV-Store has operations 
-   similar to a map with get and put functions. However, the KV-Store is persistent and can survive
-   a restart of the application.
-   The KV-Store utilizes Serializers and Deserializers (or SerDes for short) to process both Keys 
-   and Values. Since the KV-Store mostly works with `java.nio.ByteBuffer`s to achieve high performance 
-   it's necessary to convert the data into Clojure recognizable data structures.
-   See the [[clj.intracel.api.serde]] namespace on how to perform serialization (for writes) and 
-   deserialization (for reads).
-   
-   The namespace is broken out into two main parts: state and behaviors.
-   State is maintained in the `KVStoreContext` defrecord while behavior is defined in the protocol 
-   `KVStoreDb`.
-   The `KVStoreContext` defrecord lets implementors of the API provide metadata in a map needed to start 
-   up the KV-Store with the proper settings.
-   The `KVStoreDb defines what actions the KV-Store can perform.`"
-  (:import [java.nio ByteBuffer]))
+(ns clj.intracel.api.interface.protocols)
 
 (defrecord KVStoreContext [ctx])
-
-
 
 (defprotocol KVSerde
   (serialize [kv-serde data]
@@ -38,7 +19,7 @@
     Returns: 
     Data converted from a `java.nio.ByteBuffer` coming from the KV-Store into the desired Clojure data format. A failed attempt to deserialize should result in a `clojure.lang.ExceptionInfo`"))
 
-(defrecord KVStoreDbContext [^KVStoreContext kv-store-ctx ^KVSerde serde])
+(defrecord KVStoreDbContext [^KVStoreContext kv-store-ctx key-serde val-serde])
 
 (defprotocol KVStoreDb
   (db [kvs-ctx db-name db-opts]
@@ -105,21 +86,13 @@
     | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]] If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. ||
     Returns:
     A `clj.intracel.api.kv-store/KVStoreDbContext` that can be used in a builder pattern with the default `clj.intracel.api.kv-store/KVSerde` for keys configured.")
-  (put [kvs-db key value]
-    "Puts a value into the KV-Store. If a value the same key exists, it will be replaced with the value argument provided.
-
-    Depends on: [[db]] 
-    | Parameter   | Description |
-    | ------------|-------------|
-    | `kvs-db`    | A reference to the `clj.intracel.api.kv-store/KVStoreDbContext` created in the [[db]] function. |
-    | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
-    | `value`     | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serailize the `value` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). ||
-    Returns:
-    A map containing the key `written?` set to true or false. If false, use the `msg` key to check the error message."
+  (kv-put
+    [kvs-db key value]
     [kvs-db key value key-serde val-serde]
     "Puts a value into the KV-Store. If a value the same key exists, it will be replaced with the value argument provided.
-    This multi-arity version of [[put]] allows the caller to supply a specific `clj.intracel.api.kv-store/KVSerde` for the key/value pair provided. 
-    It's the caller's responsibility to use the mutli-arity [[get]] function to ensure that the key and value get deserizlized properly.
+    The 3 parameter version of [[kv-put]] uses the default SerDe (See [[set-key-serde]], [[set-val-serde]]).
+    The 5 parameter version of [[kv-put]] allows the caller to supply a specific `clj.intracel.api.kv-store/KVSerde` for the key/value pair provided. 
+    It's the caller's responsibility to use the mutli-arity [[kv-get]] function to ensure that the key and value get deserizlized properly.
 
     Depends on: [[db]] 
     | Parameter   | Description |
@@ -127,12 +100,12 @@
     | `kvs-db`    | A reference to the `clj.intracel.api.kv-store/KVStoreDbContext` created in the [[db]] function. |
     | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
     | `value`     | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serailize the `value` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
-    | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]|
-    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]||
+    | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]. Not available in 3 parameter version of this function.|
+    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in 3 parameter version of this function.||
     Returns:
     A map containing the key `written?` set to true or false. If false, use the `msg` key to check the error message.")
   (set-pre-get-hook [kvs-db pre-fn]
-    "This enables the caller to customize the behavior performed when doing a key look-up in [[get]] by allowing caller code to pre-process the key.
+    "This enables the caller to customize the behavior performed when doing a key look-up in [[kv-get]] by allowing caller code to pre-process the key.
     This could be useful for specific keys that could represent sets of data. For example, a CIDR, a wildcard to represent matching to multiple values.
     Potentially, this could also defer to a pre-key processor that checks a specialized in-memory data struction like a Bloom Filter.
     
@@ -140,53 +113,39 @@
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.kv-store/KVStoreDbContext` created in the [[db]] function. |
-    | `pre-fn`    | A function that accepts a single `key` arg and returns a new `key` that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[get]] function. ||
+    | `pre-fn`    | A function that accepts a single `key` arg and returns a new `key` that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-get]] function. ||
 
     Returns:
     This is a void operation.")
-  (get [kvs-db key]
-    "Gets a value from the KV-Store. If set, the `pre-get-hook` fn will be called on the key provided.
-
-    Depends on: [[db]] 
-    | Parameter   | Description |
-    | ------------|-------------|
-    | `kvs-db`    | A reference to the `clj.intracel.api.kv-store/KVStoreDbContext` created in the [[db]] function. |
-    | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
-    | `value`     | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serailize the `value` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). ||
-    Returns:
-    A map containing the key `written?` set to true or false. If false, use the `msg` key to check the error message."
+  (kv-get
+    [kvs-db key]
     [kvs-db key key-serde val-serde]
     "Puts a value into the KV-Store. If a value the same key exists, it will be replaced with the value argument provided.
+     The 2 parameter version of [[kv-get]] uses the default SerDe (see [[set-key-serde]], [[set-val-serde]]).
+     The 4 parameter version of [[kv-get]] allows the caller to supply a specific `clj.intracel.api.kv-store/KVSerde` to serialize the key properly on look-up and deserialize the key and value properly on retrieval.
 
     Depends on: [[db]] 
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.kv-store/KVStoreDbContext` created in the [[db]] function. |
     | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
-    | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]|
-    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]||
+    | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]. Not available in the 2 parameter version of this function.|
+    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in the 2 parameter version of this function.||
     
     Returns:
     A map containing the key `written?` set to true or false. If false, use the `msg` key to check the error message.")
+  (kv-del
+    [kvs-db key]
+    [kvs-db key key-serde]
+    "Removes a key and its corresponding value from the KV-Store using the provided KVSerde. 
+     The 2 parameter version of [[kv-del]] uses the default SerDe (see [[set-key-serde]], [[set-val-serde]]).
+     The 3 parameter version of [[kv-del]] allows the caller to supply a specific `clj.intracel.api.kv-store/KVSerde` to serialize the key properly on look-up.
   
-  (delete [kvs-db key]
-  "Removes a key and its corresponding value from the KV-Store. 
-  
-  Depends on: [[db]] 
-  | Parameter   | Description |
-  | ------------|-------------|
-  | `kvs-db`    | A reference to the `clj.intracel.api.kv-store/KVStoreDbContext` created in the [[db]] function. |
-  | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). ||
-  Returns:
-  A map containing the key `deleted?` set to true or false. If false, use the `msg` key to check the error message."
-  [kvs-db key key-serde]
-  "Removes a key and its corresponding value from the KV-Store using the provided KVSerde. 
-  
-  Depends on: [[db]] 
-  | Parameter   | Description |
-  | ------------|-------------|
-  | `kvs-db`    | A reference to the `clj.intracel.api.kv-store/KVStoreDbContext` created in the [[db]] function. |
-  | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
-  | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]||
-  Returns:
-  A map containing the key `deleted?` set to true or false. If false, use the `msg` key to check the error message."))
+    Depends on: [[db]] 
+    | Parameter   | Description |
+    | ------------|-------------|
+    | `kvs-db`    | A reference to the `clj.intracel.api.kv-store/KVStoreDbContext` created in the [[db]] function. |
+    | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
+    | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]||
+    Returns:
+    A map containing the key `deleted?` set to true or false. If false, use the `msg` key to check the error message."))
