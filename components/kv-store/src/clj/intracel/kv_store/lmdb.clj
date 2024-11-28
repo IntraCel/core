@@ -1,7 +1,9 @@
 (ns clj.intracel.kv-store.lmdb
   (:require [clj.intracel.api.interface.protocols :as proto]
             [clojure.java.io :as io]
-            [com.stuartsierra.component :as component])
+            [clojure.string :as st]
+            [com.stuartsierra.component :as component]
+            [taoensso.timbre :as log])
   (:import [java.io File]
            [java.nio ByteBuffer]
            [java.nio.charset StandardCharsets]
@@ -24,21 +26,24 @@
 ;; with high load."
 
 (def UTF_8 StandardCharsets/UTF_8)
+(def log-prefix "lmdb")
+(def one-gigabyte 1073741824)
+(def default-mem-size one-gigabyte)
 
 (defrecord LmdbRec [kvs-ctx pre-fn]
-  component/Lifecycle 
+  component/Lifecycle
   (start [this])
   (stop [this])
-  
-  proto/KVStoreDb 
+
+  proto/KVStoreDb
   (db [kvs-ctx db-name db-opts])
-  
+
   (set-key-serde [kvs-db key-serde])
-  
+
   (set-val-serde [kvs-db val-serde])
 
   (kv-put [kvs-db key value])
-  
+
   (kv-put [kvs-db key value key-serde val-serde])
 
   (set-pre-get-hook [kvs-db pre-fn])
@@ -49,10 +54,35 @@
 
   (kv-del [kvs-db key])
 
-  (kv-del [kvs-db key key-serde])
-  )
+  (kv-del [kvs-db key key-serde]))
 
-(defn create-kv-store-context [env-opts])
+(defn create-kv-store-context [{:keys [intracel.kv-store.lmdb/storage-path
+                                       intracel.kv-store.lmdb/keyspace-max-mem-size
+                                       intracel.kv-store.lmdb/num-dbs]}]
+  (let [path              (if-not (st/blank? storage-path)
+                            (io/file storage-path)
+                            (throw (ex-info (format "[%s/create-kv-store-context] Unable to produce a new KVStoreContext. Are you missing a :intracel.kv-store.lmdb/storage-path in ctx-opts?" log-prefix) {:cause :missing-storage-path})))
+        _                 (.mkdirs path)
+        _                 (log/debugf "[%s/create-kv-store-context] - path is: %s" log-prefix storage-path)
+        map-size          (or keyspace-max-mem-size default-mem-size)
+        _                 (log/debugf "[%s/create-kv-store-context] - map-size is: %s bytes" log-prefix map-size)
+        db-instance-count (or num-dbs 1)
+        _                 (log/debugf "[%s/create-kv-store-context] - db-instance-count is: %s" log-prefix db-instance-count)
+        env-flags         (make-array EnvFlags 1)
+        env               ^Env (try (-> (Env/create)
+                                ;; LMDB needs to know how large our DB may become. Over-estimating is OK
+                                ;; This sets the map size in bytes
+                                        (.setMapSize map-size)
+                                ;; LMDB needs to know how many DBs (Dbi) we want to store in this Env
+                                        (.setMaxDbs db-instance-count)
+                                ;; Open the Env. The same path can be concurrently opened and used in 
+                                ;; different processes, but do not open the same path twice in the same 
+                                ;; process at the same time.
+                                        (.open path env-flags))
+                                    (catch Exception e
+                                      (log/errorf "[%s/create-kv-store-context] Error: %s" log-prefix (.getMessage e))
+                                      (throw (ex-info (format "[%s/create-kv-store-context] Error: %s" log-prefix (.getMessage e)) {:cause :unable-to-start-lmdb-env}))))]
+    env))
 
 (defn db [kvs-ctx db-name db-opts])
 
@@ -157,10 +187,9 @@
   ;; memory as we use Dbi (and Cursor) methods. These read-only buffers remain
   ;; valid only until the Txn is released or the next Dbi or Cursor call. If
   ;; you need data afterwards, you should copy the bytes to your own buffer.
-  
+
   (with-open [txn (.txnRead env)]
     (let [found (.get db txn db-key)]
       (prn "Found: " (str (.decode UTF_8 found)))))
-  
-  (.close env)
-  )
+
+  (.close env))

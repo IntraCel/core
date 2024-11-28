@@ -12,21 +12,41 @@ to use the component."
 
 (defn create-kv-store-context
   "Starts up the KV-Store context which hosts the embedded database.
-   | Parameter   | Description |
-   | ------------|-------------|
-   | `ctx-opts`  | Map containing options to adjust the behavior of the environment at start-up.|
-   |             | | :Key:                                            | :Description: | 
-   |             | | -------------------------------------------------| --------------|
-   |             | | `:intracel.kv-store/type`                        | Used to determine which type of data store to create. Currently only option is `:lmdb`.| 
-   |             | | `:intracel.kv-store.lmdb/keyspace-max-mem-size`  | The total size (in bytes) allowed.    | 
-   |             | | `:intracel.kv-store.lmdb/num-dbs`                | The number of independent, concurrent DB objects to support.|
-   |             | | `:intracel.kv-store.lmdb/storage-path`           | Local filesystem path where the data will be persisted to disk.||
-   Returns:
-   A `clj.intracel.api.kv-store/KVStoreContext`"
+  | Parameter   | Description |
+  | ------------|-------------|
+  | `ctx-opts`  | Map containing options to adjust the behavior of the environment at start-up.|
+  |             | | :Key:                                            | :Description: | 
+  |             | | -------------------------------------------------| --------------|
+  |             | | `:intracel.kv-store/type`                        | Used to determine which type of data store to create. Currently only option is `:lmdb`.| 
+  |             | | `:intracel.kv-store.lmdb/keyspace-max-mem-size`  | The total size (in bytes) allowed.    | 
+  |             | | `:intracel.kv-store.lmdb/num-dbs`                | The number of independent, concurrent DB objects to support.|
+  |             | | `:intracel.kv-store.lmdb/storage-path`           | Local filesystem path where the data will be persisted to disk.||
+  
+  Returns:
+  A [[clj.intracel.api.kv-store/KVStoreContext]]"
   [ctx-opts]
   (proto/map->KVStoreContext {:ctx (new-kv-store-context ctx-opts)}))
 
-(defmulti new-kv-store-context (fn [ctx-opts] (:intracel.kv-store/type ctx-opts)))
+(defmulti new-kv-store-context 
+  "Polymorphic constructor for producing a specific implementation that will be assigned to the `:ctx` field in the [[clj.intracel.api.interface.protocols/KVStoreContext]].
+   
+   This function requires the ctx-opts map to contain the `:intracel.kv-store/type` field and will determine the correct implementation to generate based on the value provided.
+
+  | Parameter   | Description |
+  | ------------|-------------|
+  | `ctx-opts`  | Map containing options to adjust the behavior of the environment at start-up.|
+  |             | | :Key:                                            | :Description: | 
+  |             | | -------------------------------------------------| --------------|
+  |             | | `:intracel.kv-store/type`                        | Used to determine which type of data store to create. Currently only option is `:lmdb`.| 
+  |             | | `:intracel.kv-store.lmdb/keyspace-max-mem-size`  | The total size (in bytes) allowed.    | 
+  |             | | `:intracel.kv-store.lmdb/num-dbs`                | The number of independent, concurrent DB objects to support.|
+  |             | | `:intracel.kv-store.lmdb/storage-path`           | Local filesystem path where the data will be persisted to disk.||
+  Returns:
+  A data structure to be assigned to the `:ctx` field in the [[clj.intracel.api.interface.protocols/KVStoreContext]] "
+  (fn [ctx-opts] 
+    (if (contains? ctx-opts :intracel.kv-store/type) 
+      (:intracel.kv-store/type ctx-opts)
+      (throw (ex-info "[new-kv-store-context] Unable to produce a new KVStoreContext. Are you missing a :intracel.kv-store/type in ctx-opts?" {:cause :illegal-argument})))))
 
 (defmethod new-kv-store-context :lmdb [ctx-opts]
   (lmdb/create-kv-store-context ctx-opts))
