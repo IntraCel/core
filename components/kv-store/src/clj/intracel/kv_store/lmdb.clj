@@ -1,5 +1,6 @@
 (ns clj.intracel.kv-store.lmdb
   (:require [clj.intracel.api.interface.protocols :as proto]
+            [clj.intracel.serde.interface :as serde]
             [clojure.java.io :as io]
             [clojure.string :as st]
             [com.stuartsierra.component :as component]
@@ -30,23 +31,31 @@
 (def one-gigabyte 1073741824)
 (def default-mem-size one-gigabyte)
 
-(defrecord LmdbRec [kvs-ctx pre-fn]
+(declare translate-dbi-flags)
+
+
+
+(defrecord LmdbRec [dbi key-serde kvs-ctx pre-get-hook-fn val-serde]
   component/Lifecycle
   (start [this])
   (stop [this])
 
-  proto/KVStoreDb
-  (db [kvs-ctx db-name db-opts])
+  proto/KVStoreDbiApi
+  (set-key-serde [this key-serde]
+    (reset! (:key-serde this) key-serde)
+    this)
 
-  (set-key-serde [kvs-db key-serde])
-
-  (set-val-serde [kvs-db val-serde])
+  (set-val-serde [this val-serde]
+    (reset! (:val-serde this) val-serde)
+    this)
 
   (kv-put [kvs-db key value])
 
   (kv-put [kvs-db key value key-serde val-serde])
 
-  (set-pre-get-hook [kvs-db pre-fn])
+  (set-pre-get-hook [this pre-fn]
+    (reset! (:pre-get-hook-fn this) pre-fn)
+    this)
 
   (kv-get [kvs-db key])
 
@@ -70,21 +79,53 @@
         _                 (log/debugf "[%s/create-kv-store-context] - db-instance-count is: %s" log-prefix db-instance-count)
         env-flags         (make-array EnvFlags 1)
         env               ^Env (try (-> (Env/create)
-                                ;; LMDB needs to know how large our DB may become. Over-estimating is OK
-                                ;; This sets the map size in bytes
+                                        ;; LMDB needs to know how large our DB may become. Over-estimating is OK
+                                        ;; This sets the map size in bytes
                                         (.setMapSize map-size)
-                                ;; LMDB needs to know how many DBs (Dbi) we want to store in this Env
+                                        ;; LMDB needs to know how many DBs (Dbi) we want to store in this Env
                                         (.setMaxDbs db-instance-count)
-                                ;; Open the Env. The same path can be concurrently opened and used in 
-                                ;; different processes, but do not open the same path twice in the same 
-                                ;; process at the same time.
+                                        ;; Open the Env. The same path can be concurrently opened and used in 
+                                        ;; different processes, but do not open the same path twice in the same 
+                                        ;; process at the same time.
                                         (.open path env-flags))
                                     (catch Exception e
                                       (log/errorf "[%s/create-kv-store-context] Error: %s" log-prefix (.getMessage e))
                                       (throw (ex-info (format "[%s/create-kv-store-context] Error: %s" log-prefix (.getMessage e)) {:cause :unable-to-start-lmdb-env}))))]
-    env))
+    {:ctx env}))
 
-(defn db [kvs-ctx db-name db-opts])
+(defrecord LmdbContext [kvs-ctx db-instances]
+  proto/KVStoreDbContextApi
+  (db [this db-name db-opts]
+    (proto/db this db-name db-opts nil))
+
+  (db [this db-name db-opts pre-get-hook-fn]
+    (let [max-key-size (.getMaxKeySize (:kvs-ctx this))
+          dbi (if (contains? (:db-instances this) db-name)
+                (get (:db-instances this) db-name)
+                (let [dbi-flags (translate-dbi-flags db-opts)
+                      new-db    ^Dbi (.openDbi (:ctx kvs-ctx) db-name dbi-flags)
+                      instance  (map->LmdbRec {:dbi             new-db
+                                               :key-serde       (atom (serde/string-serde max-key-size))
+                                               :kvs-ctx         kvs-ctx
+                                               :pre-get-hook-fn (atom pre-get-hook-fn)
+                                               :val-serde       (atom (serde/string-serde 1024))})]
+                  (swap! (:db-instances this) assoc db-name instance)
+                  instance))]
+      dbi)))
+
+(defn create-kv-db-context [kvs-ctx]
+  (map->LmdbContext {:db-instances (atom {})
+                     :kvs-ctx kvs-ctx}))
+
+(defn translate-dbi-flags [db-opts]
+  (into-array DbiFlags (mapv (fn [db-opt]
+                               (cond (= db-opt :ic-db-flags/reverse-key)                           DbiFlags/MDB_REVERSEKEY
+                                     (= db-opt :ic-db-flags/multi-value-keys)                      DbiFlags/MDB_DUPSORT
+                                     (= db-opt :ic-db-flags/integer-keys)                          DbiFlags/MDB_INTEGERKEY
+                                     (= db-opt :ic-db-flags/sort-fixed-sized-duplicate-items)      DbiFlags/MDB_DUPFIXED
+                                     (= db-opt :ic-db-flags/duplicates-are-binary-integers)        DbiFlags/MDB_INTEGERDUP
+                                     (= db-opt :ic-db-flags/compare-duplicates-as-reverse-strings) DbiFlags/MDB_REVERSEDUP))
+                             db-opts)))
 
 (comment
   (def path (io/file (str (System/getProperty "java.io.tmpdir") "/lmdb/")))
