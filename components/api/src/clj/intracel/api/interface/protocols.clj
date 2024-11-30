@@ -1,4 +1,5 @@
-(ns clj.intracel.api.interface.protocols)
+(ns clj.intracel.api.interface.protocols
+  (:import [java.io Closeable]))
 
 (defprotocol KVSerde
   (serialize [kv-serde data]
@@ -17,7 +18,12 @@
     Returns: 
     Data converted from a `java.nio.ByteBuffer` coming from the KV-Store into the desired Clojure data format. A failed attempt to deserialize should result in a `clojure.lang.ExceptionInfo`"))
 
-(defrecord KVStoreContext [ctx])
+(defrecord KVStoreContext [ctx]
+  Closeable
+  (close [_]
+    (when (some? ctx) 
+      (.close ctx)))
+  )
 
 (defprotocol KVStoreDbContextApi
   (db

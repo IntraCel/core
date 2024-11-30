@@ -5,7 +5,8 @@
             [clojure.string :as st]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log])
-  (:import [java.io File]
+  (:import [clj.intracel.api.interface.protocols KVStoreDbContextApi]
+           [java.io File]
            [java.nio ByteBuffer]
            [java.nio.charset StandardCharsets]
            [org.lmdbjava ByteBufferProxy Dbi DbiFlags Env EnvFlags]))
@@ -94,15 +95,16 @@
     {:ctx env}))
 
 (defrecord LmdbContext [kvs-ctx db-instances]
-  proto/KVStoreDbContextApi
+  KVStoreDbContextApi
   (db [this db-name db-opts]
     (proto/db this db-name db-opts nil))
 
   (db [this db-name db-opts pre-get-hook-fn]
-    (let [max-key-size (.getMaxKeySize (:kvs-ctx this))
-          dbi (if (contains? (:db-instances this) db-name)
-                (get (:db-instances this) db-name)
+    (let [max-key-size (.getMaxKeySize (:ctx kvs-ctx))
+          dbi (if (contains? @(:db-instances this) db-name)
+                (get @(:db-instances this) db-name)
                 (let [dbi-flags (translate-dbi-flags db-opts)
+                      _         (log/debugf "[db] dbi-flags type: %s, count: %s, values: %s" (type dbi-flags) (count dbi-flags) (into [] dbi-flags))
                       new-db    ^Dbi (.openDbi (:ctx kvs-ctx) db-name dbi-flags)
                       instance  (map->LmdbRec {:dbi             new-db
                                                :key-serde       (atom (serde/string-serde max-key-size))
@@ -118,13 +120,16 @@
                      :kvs-ctx kvs-ctx}))
 
 (defn translate-dbi-flags [db-opts]
+  (log/debugf "[translate-dbi-flags] db-opts: %s" db-opts)
   (into-array DbiFlags (mapv (fn [db-opt]
+                               (log/debugf "[translate-dbi-flags] db-opt: %s" db-opt)
                                (cond (= db-opt :ic-db-flags/reverse-key)                           DbiFlags/MDB_REVERSEKEY
                                      (= db-opt :ic-db-flags/multi-value-keys)                      DbiFlags/MDB_DUPSORT
                                      (= db-opt :ic-db-flags/integer-keys)                          DbiFlags/MDB_INTEGERKEY
                                      (= db-opt :ic-db-flags/sort-fixed-sized-duplicate-items)      DbiFlags/MDB_DUPFIXED
                                      (= db-opt :ic-db-flags/duplicates-are-binary-integers)        DbiFlags/MDB_INTEGERDUP
-                                     (= db-opt :ic-db-flags/compare-duplicates-as-reverse-strings) DbiFlags/MDB_REVERSEDUP))
+                                     (= db-opt :ic-db-flags/compare-duplicates-as-reverse-strings) DbiFlags/MDB_REVERSEDUP
+                                     (= db-opt :ic-db-flags/create-db-if-not-exists)               DbiFlags/MDB_CREATE))
                              db-opts)))
 
 (comment

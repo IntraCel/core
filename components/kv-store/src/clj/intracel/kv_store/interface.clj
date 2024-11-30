@@ -3,7 +3,8 @@
 Generally, this is the namespace users of the KV-Store will put in their [[require]] statement 
 to use the component."
   (:require [clj.intracel.api.interface.protocols :as proto]
-            [clj.intracel.kv-store.lmdb :as lmdb])
+            [clj.intracel.kv-store.lmdb :as lmdb]
+            [taoensso.timbre :as log])
   (:import [clj.intracel.api.interface.protocols KVStoreContext KVStoreDbiApi KVSerde]
            [java.nio ByteBuffer]
            ))
@@ -53,19 +54,21 @@ to use the component."
   (lmdb/create-kv-store-context ctx-opts))
 
 
-(defn create-kv-db-context [kvs-ctx kv-store-type]
-  (new-kv-db-context kvs-ctx))
+(defn create-kv-store-db-context [kvs-ctx kv-store-type]
+  (log/debugf "[create-kv-store-db-context] Creating DB Context for: %s" kv-store-type)
+  (new-kv-db-context kvs-ctx kv-store-type))
 
 (defmulti new-kv-db-context (fn [kvs-ctx kv-store-type]
                               kv-store-type))
 
 (defmethod new-kv-db-context :lmdb [kvs-ctx kv-store-type]
+  (log/debugf "[new-kv-db-context] Creating DB specific context for: %s" kv-store-type)
   (lmdb/create-kv-db-context kvs-ctx))
 
 (defn db
   "Returns a hosted embedded database. See [[clj.intracel.api.kv-store/KVStoreDb]].
   
-  Depends on: [[create-kv-store-context]]"
+  Depends on: [[create-kv-store-db-context]]"
   ([kvs-db-ctx db-name db-opts]
    (db kvs-db-ctx db-name db-opts nil))
   ([kvs-db-ctx db-name db-opts pre-get-hook-fn]
