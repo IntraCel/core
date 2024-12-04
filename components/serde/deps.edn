@@ -1,4 +1,4 @@
 {:paths ["src" "resources"]
- :deps {}
+ :deps {com.taoensso/nippy {:mvn/version "3.4.2"}}
  :aliases {:test {:extra-paths ["test"]
                   :extra-deps {}}}}
