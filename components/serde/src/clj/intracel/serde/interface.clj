@@ -1,5 +1,7 @@
 (ns clj.intracel.serde.interface
   (:require [clj.intracel.serde.big-int-serde :as big-int-serde]
+            [clj.intracel.serde.double-serde :as double-serde]
+            [clj.intracel.serde.float-serde :as float-serde]
             [clj.intracel.serde.int-serde :as int-serde]
             [clj.intracel.serde.long-serde :as long-serde]
             [clj.intracel.serde.nippy-serde :as nippy-serde]
@@ -8,6 +10,12 @@
 
 (defn big-int-serde []
   (big-int-serde/create))
+
+(defn double-serde []
+  (double-serde/create))
+
+(defn float-serde []
+  (float-serde/create))
 
 (defn int-serde []
   (int-serde/create))

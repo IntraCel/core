@@ -2,8 +2,7 @@
   (:require [clojure.test :as test :refer :all]
             [clj.intracel.api.interface.protocols :as proto]
             [clj.intracel.serde.interface :as serde]
-            [clj.intracel.serde.uint-128-serde :as u128]
-            [clj.intracel.serde.uint-128-serde :as u128-int-serde])
+            [clj.intracel.serde.uint-128-serde :as u128])
   (:import [java.math BigInteger]
            [java.nio ByteBuffer]
            [java.nio.charset StandardCharsets]))
@@ -19,6 +18,47 @@
       (is (not (nil? int-buf)))
       (let [des-int (proto/deserialize big-int-serde int-buf)]
         (is (= (.toString des-int) big-int))))))
+
+(deftest test-double-serde
+  (testing "When double is given that it produces a properly built ByteBuffer"
+    (let [pos-double   (double 42.3)
+          double-serde (serde/double-serde)
+          double-buf   ^ByteBuffer (proto/serialize double-serde pos-double)]
+      (is (not (nil? double-buf)))
+      (let [des-double (proto/deserialize double-serde double-buf)]
+        (is (= des-double pos-double)))))
+  (testing "When negative double is used and it produces a properly built ByteBuffer"
+    (let [neg-double   (double -713.89)
+          double-serde (serde/double-serde)
+          double-buf   ^ByteBuffer (proto/serialize double-serde neg-double)]
+      (is (not (nil? double-buf)))
+      (let [des-double (proto/deserialize double-serde double-buf)]
+        (is (= des-double neg-double)))))
+  (testing "Boundary is beyond capacity for a 64-bit double and should throw an exception"
+    (let [too-large-double (* 2.0 Double/MAX_VALUE)
+          double-serde     (serde/double-serde)]
+      (is (thrown? clojure.lang.ExceptionInfo (proto/serialize double-serde too-large-double))))))
+
+(deftest test-float-serde
+  (testing "When float is given that it produces a properly built ByteBuffer"
+    (let [pos-float   (float 42.3)
+          float-serde (serde/float-serde)
+          float-buf   ^ByteBuffer (proto/serialize float-serde pos-float)]
+      (is (not (nil? float-buf)))
+      (let [des-float (proto/deserialize float-serde float-buf)]
+        (is (= des-float pos-float)))))
+  (testing "When negative float is used and it produces a properly built ByteBuffer"
+    (let [neg-float   (float -713.89)
+          float-serde (serde/float-serde)
+          float-buf   ^ByteBuffer (proto/serialize float-serde neg-float)]
+      (is (not (nil? float-buf)))
+      (let [des-float (proto/deserialize float-serde float-buf)]
+        (is (= des-float neg-float)))))
+  (testing "Boundary is beyond capacity for a 32-bit float and should throw an exception"
+    (let [too-large-float (* 2.0 Float/MAX_VALUE)
+          float-serde     (serde/float-serde)]
+      (is (thrown? clojure.lang.ExceptionInfo (proto/serialize float-serde too-large-float))))))
+
 
 (deftest test-int-serde
   (testing "When integer is given that it produces a properly built ByteBuffer"
@@ -96,15 +136,14 @@
       (let [des-str        (proto/deserialize larger-str-serde larger-buf)]
         (is (= des-str larger-str))))))
 
-(deftest test-uint-128-serde 
+(deftest test-uint-128-serde
   (testing "When a `BigInteger` with a valid unsigned 128-bit value properly produces a ByteBuffer."
     (let [u128-val   (u128/uint-128-from-big-int (BigInteger. "340282366920938463463374607431768211454"))
           u128-serde (serde/u128-int-serde)
           buf        ^ByteBuffer (proto/serialize u128-serde u128-val)]
       (is (not (nil? buf)))
       (let [des-u128 (proto/deserialize u128-serde buf)]
-        (is (= (.toString des-u128) (.toString (:uint-128 u128-val)))))
-      ))
+        (is (= (.toString des-u128) (.toString (:uint-128 u128-val)))))))
   (testing "When a `long` with valid unsigned 128-bit value properly produces a ByteBuffer."
     (let [u128-val   (u128/uint-128-from-long Long/MAX_VALUE)
           u128-serde (serde/u128-int-serde)
@@ -133,7 +172,5 @@
   (testing "When a value provide is negative which is not allowed for 128-bit unsigned integer."
     (let [neg  (BigInteger. "-1") ;;negative value
           u128-serde (serde/u128-int-serde)]
-      (is (thrown? clojure.lang.ExceptionInfo (proto/serialize u128-serde neg)))))
-  
-  )
+      (is (thrown? clojure.lang.ExceptionInfo (proto/serialize u128-serde neg))))))
 
