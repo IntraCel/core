@@ -6,8 +6,7 @@ to use the component."
             [clj.intracel.kv-store.lmdb :as lmdb]
             [taoensso.timbre :as log])
   (:import [clj.intracel.api.interface.protocols KVStoreContext KVStoreDbiApi KVSerde]
-           [java.nio ByteBuffer]
-           ))
+           [java.nio ByteBuffer]))
 
 (declare new-kv-store-context new-kv-db-context)
 
@@ -28,7 +27,7 @@ to use the component."
   [ctx-opts]
   (proto/map->KVStoreContext (new-kv-store-context ctx-opts)))
 
-(defmulti new-kv-store-context 
+(defmulti new-kv-store-context
   "Polymorphic constructor for producing a specific implementation that will be assigned to the `:ctx` field in the [[clj.intracel.api.interface.protocols/KVStoreContext]].
    
    This function requires the ctx-opts map to contain the `:intracel.kv-store/type` field and will determine the correct implementation to generate based on the value provided.
@@ -44,8 +43,8 @@ to use the component."
   |             | | `:intracel.kv-store.lmdb/storage-path`           | Local filesystem path where the data will be persisted to disk.||
   Returns:
   A data structure to be assigned to the `:ctx` field in the [[clj.intracel.api.interface.protocols/KVStoreContext]] "
-  (fn [ctx-opts] 
-    (if (contains? ctx-opts :intracel.kv-store/type) 
+  (fn [ctx-opts]
+    (if (contains? ctx-opts :intracel.kv-store/type)
       (:intracel.kv-store/type ctx-opts)
       (throw (ex-info "[new-kv-store-context] Unable to produce a new KVStoreContext. Are you missing a :intracel.kv-store/type in ctx-opts?" {:cause :illegal-argument})))))
 
@@ -93,9 +92,9 @@ Depends on: [[db]]"
 
 Depends on: [[db]]."
   ([^KVStoreDbiApi kvs-db key value]
-  (proto/kv-put kvs-db key value))
+   (proto/kv-put kvs-db key value))
   ([^KVStoreDbiApi kvs-db value ^KVSerde key-serde ^KVSerde val-serde]
-  (proto/kv-put kvs-db key value key-serde val-serde)))
+   (proto/kv-put kvs-db key value key-serde val-serde)))
 
 (defn set-pre-get-hook
   "This enables the caller to customize the behavior performed when doing a key look-up in [[kv-get]] by allowing caller code to pre-process the key. See [[clj.intracel.api.kv-store/KVStoreDb]].
@@ -109,15 +108,15 @@ Depends on: [[db]]"
 
 Depends on: [[db]]"
   ([^KVStoreDbiApi kvs-db key]
-  (proto/kv-get kvs-db key))
+   (proto/kv-get kvs-db key))
   ([^KVStoreDbiApi kvs-db key ^KVSerde key-serde ^KVSerde val-serde]
-  (proto/kv-get kvs-db key key-serde val-serde)))
+   (proto/kv-get kvs-db key key-serde val-serde)))
 
 (defn kv-del
   "Removes a key and its corresponding value from the KV-Store. This is a multi-arity function with the 2-parameter version using the default SerDe (see [[set-key-serde]]), and the 3-parameter version allowing the caller to provide its own key SerDe. See [[clj.intracel.api.kv-store/KVStoreDb]].
 
 Depends on: [[db]]"
   ([^KVStoreDbiApi kvs-db key]
-  (proto/kv-del kvs-db key))
+   (proto/kv-del kvs-db key))
   ([^KVStoreDbiApi kvs-db key ^KVSerde key-serde]
-  (proto/kv-del kvs-db key key-serde)))
+   (proto/kv-del kvs-db key key-serde)))

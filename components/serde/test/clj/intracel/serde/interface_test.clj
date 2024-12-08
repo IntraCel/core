@@ -10,14 +10,49 @@
 (deftest dummy-test
   (is (= 1 1)))
 
+(deftest test-big-decimal-serde
+  (testing "When big decimal (larger than 64-bit) is given that it produces a properly built ByteBuffer"
+    ;;Double/MAX_VALUE is 1.79E308 so we'll go just a little larger than that
+    (let [dec-val       (BigDecimal. "1.8")
+          big-dec-val   (.pow dec-val 308)
+          big-dec-serde (serde/big-decimal-serde)
+          big-dec-buf   ^ByteBuffer (proto/serialize big-dec-serde big-dec-val)]
+      (is (not (nil? big-dec-buf)))
+      (let [des-dec (proto/deserialize big-dec-serde big-dec-buf)]
+        (is (= des-dec big-dec-val))))))
+
 (deftest test-big-int-serde
-  (testing "When big integer (larger than 32-bit) is given that it produces a properly built ByteBuffer"
+  (testing "When big integer (larger than 64-bit) is given that it produces a properly built ByteBuffer"
     (let [big-int       "92233720368547758070" ;;10x larger than a Long/MAX_VALUE 
           big-int-serde (serde/big-int-serde)
           int-buf   ^ByteBuffer (proto/serialize big-int-serde big-int)]
       (is (not (nil? int-buf)))
       (let [des-int (proto/deserialize big-int-serde int-buf)]
         (is (= (.toString des-int) big-int))))))
+
+(deftest test-byte-serde
+  (testing "When byte is given that it produces a properly built ByteBuffer"
+    (let [pos-byte (byte 42)
+          byte-serde (serde/byte-serde)
+          byte-buf   ^ByteBuffer (proto/serialize byte-serde pos-byte)]
+      (is (not (nil? byte-buf)))
+      (let [des-int (proto/deserialize byte-serde byte-buf)]
+        (is (= des-int pos-byte)))))
+  (testing "When negative byte is used and it produces a properly built ByteBuffer"
+    (let [neg-byte (int -127)
+          byte-serde (serde/byte-serde)
+          byte-buf   ^ByteBuffer (proto/serialize byte-serde neg-byte)]
+      (is (not (nil? byte-buf)))
+      (let [des-byte (proto/deserialize byte-serde byte-buf)]
+        (is (= des-byte neg-byte)))))
+  (testing "Boundary just one beyond capacity for an 8-bit integer and should throw an exception"
+    (let [too-large-byte (+ Byte/MAX_VALUE 1)
+          byte-serde (serde/byte-serde)]
+      (is (thrown? clojure.lang.ExceptionInfo (proto/serialize byte-serde too-large-byte)))))
+  (testing "Boundary just one beyond capacity for a negative 8-bit integer and should throw an exception"
+    (let [too-neg-byte (- Byte/MIN_VALUE 1)
+          byte-serde (serde/byte-serde)]
+      (is (thrown? clojure.lang.ExceptionInfo (proto/serialize byte-serde too-neg-byte))))))
 
 (deftest test-double-serde
   (testing "When double is given that it produces a properly built ByteBuffer"
@@ -119,10 +154,34 @@
       (let [des-edn        (proto/deserialize nippy-serde buf)]
         (is (= des-edn edn-data))))))
 
+(deftest test-short-serde
+  (testing "When short is given that it produces a properly built ByteBuffer"
+    (let [pos-short (short 42)
+          short-serde (serde/short-serde)
+          short-buf   ^ByteBuffer (proto/serialize short-serde pos-short)]
+      (is (not (nil? short-buf)))
+      (let [des-short (proto/deserialize short-serde short-buf)]
+        (is (= des-short pos-short)))))
+  (testing "When negative byte is used and it produces a properly built ByteBuffer"
+    (let [neg-short (int -32768)
+          short-serde (serde/short-serde)
+          short-buf   ^ByteBuffer (proto/serialize short-serde neg-short)]
+      (is (not (nil? short-buf)))
+      (let [des-short (proto/deserialize short-serde short-buf)]
+        (is (= des-short neg-short)))))
+  (testing "Boundary just one beyond capacity for an 8-bit integer and should throw an exception"
+    (let [too-large-short (+ Short/MAX_VALUE 1)
+          short-serde (serde/short-serde)]
+      (is (thrown? clojure.lang.ExceptionInfo (proto/serialize short-serde too-large-short)))))
+  (testing "Boundary just one beyond capacity for a negative 8-bit integer and should throw an exception"
+    (let [too-neg-short (- Short/MIN_VALUE 1)
+          short-serde (serde/short-serde)]
+      (is (thrown? clojure.lang.ExceptionInfo (proto/serialize short-serde too-neg-short))))))
+
 (deftest test-string-serde
   (testing "When a String is given that it produces a properly built ByteBuffer"
     (let [small-str        "Dr. Daniel Jackson"
-          small-str-serde  (serde/string-serde (count small-str))
+          small-str-serde  (serde/string-serde)
           small-buf        ^ByteBuffer (proto/serialize small-str-serde small-str)]
       (is (not (nil? small-buf)))
       (let [des-str        (proto/deserialize small-str-serde small-buf)]
@@ -130,7 +189,7 @@
 
   (testing "When a longer string is given that it produces a properly build ByteBuffer"
     (let [larger-str       "a;sdlkfa;lkjf; uue3ql ;auu af;sdklf;asduf up;alsdfu u3k1l4;521l3342o89 ;nA;F;ASDLFI IYYT651;1;L34K24U42L3L U ALDHFHSADFJ a;sdlkfa;lkjf; uue3ql ;auu af;sdklf;asduf up;alsdfu u3k1l4;521l3342o89 ;nA;F;ASDLFI IYYT651;1;L34K24U42L3L U ALDHFHSADFJ a;sdlkfa;lkjf; uue3ql ;auu af;sdklf;asduf up;alsdfu u3k1l4;521l3342o89 ;nA;F;ASDLFI IYYT651;1;L34K24U42L3L U ALDHFHSADFJ"
-          larger-str-serde (serde/string-serde (count larger-str))
+          larger-str-serde (serde/string-serde)
           larger-buf       ^ByteBuffer (proto/serialize larger-str-serde larger-str)]
       (is (not (nil? larger-buf)))
       (let [des-str        (proto/deserialize larger-str-serde larger-buf)]

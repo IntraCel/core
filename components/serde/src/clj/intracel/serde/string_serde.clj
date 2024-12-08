@@ -7,8 +7,10 @@
 
 (defrecord StringSerde [byte-capacity]
   proto/KVSerde 
-  (serialize [this data]
-    (let [buf ^ByteBuffer (ByteBuffer/allocateDirect byte-capacity)]
+  (serialize [this data] 
+    (let [bytes (.getBytes data)
+          byte-capacity (count bytes)
+          buf ^ByteBuffer (ByteBuffer/allocateDirect byte-capacity)]
       ;; In Java NIO, the ByteBuffer.flip() method is used to transition a buffer from its 
       ;; "writing mode" to its "reading mode" by essentially setting the buffer's limit to 
       ;; its current position and then resetting the position back to zero, effectively 
@@ -22,5 +24,5 @@
   (deserialize [this data]
     (str (.decode UTF_8 data))))
 
-(defn create [byte-capacity]
-  (map->StringSerde {:byte-capacity byte-capacity}))
+(defn create []
+  (map->StringSerde {}))
