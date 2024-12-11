@@ -87,6 +87,27 @@
     An `clj.intracel.api.kv-store/KVStoreDb` that can be used in a builder pattern to compose a KV-Store database instance with the desired settings."))
 
 (defprotocol KVStoreDbiApi
+  (start [kvs-db]
+    "This effectively acts as a constructor function to an instance of the [[clj.intracel.api.protocols.KVStoreDbiApi]].
+     Any start-up logic or state that needs to be initialized would be set up in this function.
+    
+    Depends on: [[db]] 
+    | Parameter   | Description |
+    | ------------|-------------|
+    | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. ||
+    Returns:
+    A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern with the default `clj.intracel.api.kv-store/KVSerde` for keys configured.")
+
+  (stop [kvs-db]
+    "This shuts down the [[clj.intracel.api.protocols.KVStoreDbiApi]] instance.
+     Any shut down logic or state that needs to be stopped would be done here.
+        
+    Depends on: [[db]] 
+    | Parameter   | Description |
+    | ------------|-------------|
+    | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. ||
+    Returns:
+    A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern with the default `clj.intracel.api.kv-store/KVSerde` for keys configured.")
 
   (set-key-serde [kvs-db key-serde]
     "Sets the default key SerDe used for serializing to and deserializing from a [[clj.intracel.api.protocols/KVStoreDbiApi]]

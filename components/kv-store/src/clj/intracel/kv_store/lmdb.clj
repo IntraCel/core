@@ -41,49 +41,53 @@
 
 
 (defrecord LmdbRec [cmd-chan dbi key-serde kvs-ctx pre-get-hook-fn val-serde]
-  component/Lifecycle
-  (start [this]
+  proto/KVStoreDbiApi
+  (start [kvs-db]
     (log/info "[kv-store](LmdbRec) Starting KV-Store Service.")
-    (if (some? this)
-      this
+    (if (some? kvs-db)
+      kvs-db
       (do (go (loop []
-                (let [{:keys [key value k-serde v-serde]} (<! @cmd-chan)
+                (let [{:keys [cmd key value k-serde v-serde]} (<! @cmd-chan)
                       ks      (or k-serde key-serde)
                       vs      (or v-serde val-serde)
                       _       (log/debugf "[kv-store](LmdbRec) Serializing key: %s, val: %s" key value)
                       key-buf (proto/serialize ks key)
                       val-buf (proto/serialize vs value)]
                   (with-open [txn ^Txn (.txnWrite {:ctx kvs-ctx})]
-                    (.put dbi txn key-buf val-buf) 
+                    (case cmd
+                      :put    (.put dbi txn key-buf val-buf)
+                      :delete (.delete dbi txn key-buf))
                     (.commit txn)
                     (log/debugf "[kv-store](LmdbRec) Committed key %s to KV-Store." key)))
                 (recur)))
           (log/info "[kv-store](LmdbRec) KV-Store Service started.")
-          this)))
-  (stop [this]
+          kvs-db)))
+  (stop [kvs-db]
     (log/info "[kv-store](LmdbRec) Shutting down KV-Store Service.")
     (when (some? @cmd-chan)
       (log/info "[kv-store](LmdbRec) Shutting down command processing channel.")
       (close! @cmd-chan)
       (log/info "[kv-store](LmdbRec) Command processing channel closed."))
     (log/info "[kv-store](LmdbRec) KV-Store Service shut-down complete.")
-    this)
+    kvs-db)
 
-  proto/KVStoreDbiApi
-  (set-key-serde [this key-serde]
-    (reset! (:key-serde this) key-serde)
-    this)
+  
+  (set-key-serde [kvs-db key-serde]
+    (reset! (:key-serde kvs-db) key-serde)
+    kvs-db)
 
-  (set-val-serde [this val-serde]
-    (reset! (:val-serde this) val-serde)
-    this)
+  (set-val-serde [kvs-db val-serde]
+    (reset! (:val-serde kvs-db) val-serde)
+    kvs-db)
 
   (kv-put [kvs-db key value]
-    (go (>! @cmd-chan {:key    key
+    (go (>! @cmd-chan {:cmd :put
+                       :key    key
                        :value  value})))
 
   (kv-put [kvs-db key value key-serde val-serde]
-    (go (>! @cmd-chan {:key key
+    (go (>! @cmd-chan {:cmd :put
+                       :key key
                        :value value
                        :k-serde key-serde
                        :v-serde val-serde})))
@@ -92,13 +96,35 @@
     (reset! (:pre-get-hook-fn this) pre-fn)
     this)
 
-  (kv-get [kvs-db key])
+  (kv-get [kvs-db key]
+    (log/debugf "[kv-get](LmdbRec) Retrieving key %s from KV-Store." key)
+    (with-open [txn ^Txn (.txnRead {:ctx kvs-ctx})]
+      (let [key-buf (proto/serialize key-serde key)
+            found   (.get dbi txn key-buf)]
+        (if (some? found)
+          (proto/deserialize val-serde found)
+          nil))))
 
-  (kv-get [kvs-db key key-serde val-serde])
+  (kv-get [kvs-db key k-serde v-serde]
+    (log/debugf "[kv-get](LmdbRec) Retrieving key %s from KV-Store with provided SerDes." key)
+    (let [ks      (or k-serde (:key-serde kvs-db))
+          vs      (or v-serde (:val-serde kvs-db))]
+      (with-open [txn ^Txn (.txnRead {:ctx kvs-ctx})]
+        (let [key-buf (proto/serialize ks key)
+              found   (.get dbi txn key-buf)]
+          (if (some? found)
+            (proto/deserialize vs found)
+            nil)))))
 
-  (kv-del [kvs-db key])
+  (kv-del [kvs-db key]
+    (go (>! @cmd-chan {:cmd :delete
+                       :key key})))
 
-  (kv-del [kvs-db key key-serde]))
+  (kv-del [kvs-db key k-serde]
+    (let [ks (or k-serde (:key-serde kvs-db))]
+      (go (>! @cmd-chan {:cmd    :delete
+                         :key     key
+                         :k-serde ks})))))
 
 (defn create-kv-store-context [{:keys [intracel.kv-store.lmdb/storage-path
                                        intracel.kv-store.lmdb/keyspace-max-mem-size
@@ -151,8 +177,9 @@
                                                :key-serde       (atom (serde/string-serde max-key-size))
                                                :kvs-ctx         kvs-ctx
                                                :pre-get-hook-fn (atom pre-get-hook-fn)
-                                               :val-serde       (atom (serde/string-serde 1024))})]
-                  (swap! (:db-instances this) assoc db-name instance)
+                                               :val-serde       (atom (serde/string-serde 1024))})
+                      started   (proto/start instance)]
+                  (swap! (:db-instances this) assoc db-name started)
                   instance))]
       dbi)))
 
