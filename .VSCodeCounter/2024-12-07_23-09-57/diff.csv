@@ -1,0 +1,13 @@
+"filename", "language", "Clojure", "comment", "blank", "total"
+"/home/jared/dev/projects/intracel/core/.clj-kondo/imports/taoensso/encore/config.edn", "Clojure", 3, 0, 0, 3
+"/home/jared/dev/projects/intracel/core/.clj-kondo/imports/taoensso/encore/taoensso/encore.clj", "Clojure", 19, 0, 2, 21
+"/home/jared/dev/projects/intracel/core/components/kv-store/src/clj/intracel/kv_store/interface.clj", "Clojure", -1, 0, 0, -1
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/big_decimal_serde.clj", "Clojure", 19, 7, 4, 30
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/byte_serde.clj", "Clojure", 24, 8, 4, 36
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/double_serde.clj", "Clojure", 23, 7, 4, 34
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/float_serde.clj", "Clojure", 23, 7, 4, 34
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/interface.clj", "Clojure", 84, 0, 16, 100
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/short_serde.clj", "Clojure", 23, 7, 4, 34
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/string_serde.clj", "Clojure", 2, 0, 0, 2
+"/home/jared/dev/projects/intracel/core/components/serde/test/clj/intracel/serde/interface_test.clj", "Clojure", 90, 1, 5, 96
+"Total", "-", 309, 37, 43, 389

@@ -1,6 +1,10 @@
 (ns clj.intracel.kv-store.lmdb
   (:require [clj.intracel.api.interface.protocols :as proto]
             [clj.intracel.serde.interface :as serde]
+            [clojure.core.async
+             :as a
+             :refer [>! <! >!! <!! go chan buffer close! thread
+                     alts! alts!! timeout]]
             [clojure.java.io :as io]
             [clojure.string :as st]
             [com.stuartsierra.component :as component]
@@ -9,7 +13,7 @@
            [java.io File]
            [java.nio ByteBuffer]
            [java.nio.charset StandardCharsets]
-           [org.lmdbjava ByteBufferProxy Dbi DbiFlags Env EnvFlags]))
+           [org.lmdbjava ByteBufferProxy Dbi DbiFlags Env EnvFlags Txn]))
 ;; In order for LMDB Java to load int memory properly, the JAVA_OPTS variable needs the 
 ;; following values set:
 ;; --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED
@@ -32,14 +36,38 @@
 (def one-gigabyte 1073741824)
 (def default-mem-size one-gigabyte)
 
-(declare translate-dbi-flags)
+(declare translate-dbi-flags configure-channel)
 
 
 
-(defrecord LmdbRec [dbi key-serde kvs-ctx pre-get-hook-fn val-serde]
+(defrecord LmdbRec [cmd-chan dbi key-serde kvs-ctx pre-get-hook-fn val-serde]
   component/Lifecycle
-  (start [this])
-  (stop [this])
+  (start [this]
+    (log/info "[kv-store](LmdbRec) Starting KV-Store Service.")
+    (if (some? this)
+      this
+      (do (go (loop []
+                (let [{:keys [key value k-serde v-serde]} (<! @cmd-chan)
+                      ks      (or k-serde key-serde)
+                      vs      (or v-serde val-serde)
+                      _       (log/debugf "[kv-store](LmdbRec) Serializing key: %s, val: %s" key value)
+                      key-buf (proto/serialize ks key)
+                      val-buf (proto/serialize vs value)]
+                  (with-open [txn ^Txn (.txnWrite {:ctx kvs-ctx})]
+                    (.put dbi txn key-buf val-buf) 
+                    (.commit txn)
+                    (log/debugf "[kv-store](LmdbRec) Committed key %s to KV-Store." key)))
+                (recur)))
+          (log/info "[kv-store](LmdbRec) KV-Store Service started.")
+          this)))
+  (stop [this]
+    (log/info "[kv-store](LmdbRec) Shutting down KV-Store Service.")
+    (when (some? @cmd-chan)
+      (log/info "[kv-store](LmdbRec) Shutting down command processing channel.")
+      (close! @cmd-chan)
+      (log/info "[kv-store](LmdbRec) Command processing channel closed."))
+    (log/info "[kv-store](LmdbRec) KV-Store Service shut-down complete.")
+    this)
 
   proto/KVStoreDbiApi
   (set-key-serde [this key-serde]
@@ -50,9 +78,15 @@
     (reset! (:val-serde this) val-serde)
     this)
 
-  (kv-put [kvs-db key value])
+  (kv-put [kvs-db key value]
+    (go (>! @cmd-chan {:key    key
+                       :value  value})))
 
-  (kv-put [kvs-db key value key-serde val-serde])
+  (kv-put [kvs-db key value key-serde val-serde]
+    (go (>! @cmd-chan {:key key
+                       :value value
+                       :k-serde key-serde
+                       :v-serde val-serde})))
 
   (set-pre-get-hook [this pre-fn]
     (reset! (:pre-get-hook-fn this) pre-fn)
@@ -96,17 +130,24 @@
 
 (defrecord LmdbContext [kvs-ctx db-instances]
   KVStoreDbContextApi
-  (db [this db-name db-opts]
-    (proto/db this db-name db-opts nil))
+  (db [this db-name]
+    (proto/db this db-name nil nil nil))
 
-  (db [this db-name db-opts pre-get-hook-fn]
+  (db [this db-name chan-opts]
+    (proto/db this db-name chan-opts nil nil))
+
+  (db [this db-name chan-opts db-opts]
+    (proto/db this db-name chan-opts db-opts nil))
+
+  (db [this db-name chan-opts db-opts pre-get-hook-fn]
     (let [max-key-size (.getMaxKeySize (:ctx kvs-ctx))
           dbi (if (contains? @(:db-instances this) db-name)
                 (get @(:db-instances this) db-name)
                 (let [dbi-flags (translate-dbi-flags db-opts)
                       _         (log/debugf "[db] dbi-flags type: %s, count: %s, values: %s" (type dbi-flags) (count dbi-flags) (into [] dbi-flags))
                       new-db    ^Dbi (.openDbi (:ctx kvs-ctx) db-name dbi-flags)
-                      instance  (map->LmdbRec {:dbi             new-db
+                      instance  (map->LmdbRec {:cmd-chan        (atom (configure-channel chan-opts))
+                                               :dbi             new-db
                                                :key-serde       (atom (serde/string-serde max-key-size))
                                                :kvs-ctx         kvs-ctx
                                                :pre-get-hook-fn (atom pre-get-hook-fn)
@@ -131,6 +172,14 @@
                                      (= db-opt :ic-db-flags/compare-duplicates-as-reverse-strings) DbiFlags/MDB_REVERSEDUP
                                      (= db-opt :ic-db-flags/create-db-if-not-exists)               DbiFlags/MDB_CREATE))
                              db-opts)))
+
+(defn configure-channel [chan-opts]
+  (log/debugf "[configure-channel] chan-opts: %s" chan-opts)
+  (if (and (map? chan-opts)
+           (seq chan-opts))
+    (cond (contains? chan-opts :ic-chan-opts/replacement-chan) (:ic-chan-opts/replacement-chan chan-opts)
+          (contains? chan-opts :ic-chan-opts/buf-size)         (chan (buffer (:ic-chan-opts/buf-size chan-opts))))
+    (chan (buffer 10000))))
 
 (comment
   (def path (io/file (str (System/getProperty "java.io.tmpdir") "/lmdb/")))

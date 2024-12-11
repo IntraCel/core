@@ -1,0 +1,35 @@
+"filename", "language", "Clojure", "Markdown", "Shell Script", "JSON with Comments", "comment", "blank", "total"
+"/home/jared/dev/projects/intracel/core/.clj-kondo/imports/taoensso/encore/config.edn", "Clojure", 4, 0, 0, 0, 0, 1, 5
+"/home/jared/dev/projects/intracel/core/.clj-kondo/imports/taoensso/encore/taoensso/encore.clj", "Clojure", 34, 0, 0, 0, 0, 4, 38
+"/home/jared/dev/projects/intracel/core/README.md", "Markdown", 0, 22, 0, 0, 0, 16, 38
+"/home/jared/dev/projects/intracel/core/components/api/deps.edn", "Clojure", 4, 0, 0, 0, 0, 1, 5
+"/home/jared/dev/projects/intracel/core/components/api/src/clj/intracel/api/interface/protocols.clj", "Clojure", 146, 0, 0, 0, 0, 14, 160
+"/home/jared/dev/projects/intracel/core/components/api/test/clj/intracel/api/interface_test.clj", "Clojure", 5, 0, 0, 0, 0, 2, 7
+"/home/jared/dev/projects/intracel/core/components/kv-store/deps.edn", "Clojure", 5, 0, 0, 0, 0, 1, 6
+"/home/jared/dev/projects/intracel/core/components/kv-store/src/clj/intracel/kv_store/interface.clj", "Clojure", 96, 0, 0, 0, 1, 25, 122
+"/home/jared/dev/projects/intracel/core/components/kv-store/src/clj/intracel/kv_store/lmdb.clj", "Clojure", 124, 0, 0, 0, 89, 28, 241
+"/home/jared/dev/projects/intracel/core/components/kv-store/test/clj/intracel/kv_store/interface_test.clj", "Clojure", 21, 0, 0, 0, 0, 3, 24
+"/home/jared/dev/projects/intracel/core/components/serde/deps.edn", "Clojure", 4, 0, 0, 0, 0, 1, 5
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/big_decimal_serde.clj", "Clojure", 19, 0, 0, 0, 7, 4, 30
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/big_int_helper.clj", "Clojure", 30, 0, 0, 0, 4, 5, 39
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/big_int_serde.clj", "Clojure", 13, 0, 0, 0, 0, 4, 17
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/byte_serde.clj", "Clojure", 24, 0, 0, 0, 8, 4, 36
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/double_serde.clj", "Clojure", 23, 0, 0, 0, 7, 4, 34
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/float_serde.clj", "Clojure", 23, 0, 0, 0, 7, 4, 34
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/int_serde.clj", "Clojure", 23, 0, 0, 0, 7, 4, 34
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/interface.clj", "Clojure", 103, 0, 0, 0, 0, 27, 130
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/long_serde.clj", "Clojure", 22, 0, 0, 0, 7, 4, 33
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/nippy_serde.clj", "Clojure", 25, 0, 0, 0, 4, 3, 32
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/short_serde.clj", "Clojure", 23, 0, 0, 0, 7, 4, 34
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/string_serde.clj", "Clojure", 18, 0, 0, 0, 6, 4, 28
+"/home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/uint_128_serde.clj", "Clojure", 69, 0, 0, 0, 9, 14, 92
+"/home/jared/dev/projects/intracel/core/components/serde/test/clj/intracel/serde/interface_test.clj", "Clojure", 219, 0, 0, 0, 1, 16, 236
+"/home/jared/dev/projects/intracel/core/core.code-workspace", "JSON with Comments", 0, 0, 0, 26, 0, 0, 26
+"/home/jared/dev/projects/intracel/core/deps.edn", "Clojure", 14, 0, 0, 0, 0, 5, 19
+"/home/jared/dev/projects/intracel/core/docs/kv-store.md", "Markdown", 0, 2, 0, 0, 0, 0, 2
+"/home/jared/dev/projects/intracel/core/docs/polylith.md", "Markdown", 0, 8, 0, 0, 0, 6, 14
+"/home/jared/dev/projects/intracel/core/get-clj-doc-container.sh", "Shell Script", 0, 0, 1, 0, 1, 0, 2
+"/home/jared/dev/projects/intracel/core/run-local-clj-doc.sh", "Shell Script", 0, 0, 1, 0, 1, 0, 2
+"/home/jared/dev/projects/intracel/core/set-jvm-opts.sh", "Shell Script", 0, 0, 1, 0, 0, 0, 1
+"/home/jared/dev/projects/intracel/core/workspace.edn", "Clojure", 9, 0, 0, 0, 0, 1, 10
+"Total", "-", 1100, 32, 3, 26, 166, 209, 1536
