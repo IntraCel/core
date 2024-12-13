@@ -6,14 +6,14 @@
     "Accepts data and produces a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html)
     | Parameter   | Description |
     | ------------|-------------|
-    | `kv-serde`  | A reference to implementation of the `clj.intracel.api.kv-store/KVSerde` to perform the serialization. |
+    | `kv-serde`  | A reference to implementation of the `clj.intracel.api.interface.protocols/KVSerde` to perform the serialization. |
     | `data`      | The data that is meant to be serialized. Could be in any format but should be known to the developer so that the serialization works properly. ||
     Returns: `java.nio.ByteBuffer` to be persisted into the KV-Store. A failed attempt to serialize should result in a `clojure.lang.ExceptionInfo`")
   (deserialize [kv-serde data]
     "Accepts a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html) and produces it into the desired Clojure data format (e.g. - String, Map, Avro, etc.).
     | Parameter   | Description |
     | ------------|-------------|
-    | `kv-serde`  | A reference to implementation of the `clj.intracel.api.kv-store/KVSerde` to perform the serialization. |
+    | `kv-serde`  | A reference to implementation of the `clj.intracel.api..interface.protocols/KVSerde` to perform the serialization. |
     | `data`      | The data that is meant to be deserialized. It will come from KV-Store in the form of a `java.nio.ByteBuffer` to be converted into the desired Clojure data format. ||
     Returns: 
     Data converted from a `java.nio.ByteBuffer` coming from the KV-Store into the desired Clojure data format. A failed attempt to deserialize should result in a `clojure.lang.ExceptionInfo`"))
@@ -147,6 +147,25 @@
     | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in 3 parameter version of this function.||
     Returns:
     A map containing the key `written?` set to true or false. If false, use the `msg` key to check the error message.")
+  (kv-put-async
+   [kvs-db key value]
+   [kvs-db key value key-serde val-serde]
+   "Puts a value into the KV-Store. If a value the same key exists, it will be replaced with the value argument provided.
+    The 3 parameter version of [[kv-put]] uses the default SerDe (See [[set-key-serde]], [[set-val-serde]]).
+    The 5 parameter version of [[kv-put]] allows the caller to supply a specific `clj.intracel.api.kv-store/KVSerde` for the key/value pair provided. 
+    It's the caller's responsibility to use the mutli-arity [[kv-get]] function to ensure that the key and value get deserizlized properly.
+  
+    Depends on: [[db]] 
+    | Parameter   | Description |
+    | ------------|-------------|
+    | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
+    | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
+    | `value`     | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serailize the `value` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
+    | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]. Not available in 3 parameter version of this function.|
+    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in 3 parameter version of this function.||
+    Returns:
+    A core.async channel that consumers can use to listen for acknowledgements. A response will be a map containing the `written?` set to true or false. If false, use the `msg` key to check the error message.")
+  
   (set-pre-get-hook [kvs-db pre-fn]
     "This enables the caller to customize the behavior performed when doing a key look-up in [[kv-get]] by allowing caller code to pre-process the key.
     This could be useful for specific keys that could represent sets of data. For example, a CIDR, a wildcard to represent matching to multiple values.

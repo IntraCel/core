@@ -13,7 +13,7 @@
            [java.io File]
            [java.nio ByteBuffer]
            [java.nio.charset StandardCharsets]
-           [org.lmdbjava ByteBufferProxy Dbi DbiFlags Env EnvFlags Txn]))
+           [org.lmdbjava ByteBufferProxy Dbi DbiFlags Env EnvFlags PutFlags Txn]))
 ;; In order for LMDB Java to load int memory properly, the JAVA_OPTS variable needs the 
 ;; following values set:
 ;; --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED
@@ -36,32 +36,41 @@
 (def one-gigabyte 1073741824)
 (def default-mem-size one-gigabyte)
 
-(declare translate-dbi-flags configure-channel)
+(declare translate-dbi-flags configure-channel pre-process-key-for-get)
 
 
 
-(defrecord LmdbRec [cmd-chan dbi key-serde kvs-ctx pre-get-hook-fn val-serde]
+(defrecord LmdbRec [cmd-chan dbi key-serde kvs-ctx max-key-size pre-get-hook-fn val-serde]
   proto/KVStoreDbiApi
   (start [kvs-db]
     (log/info "[kv-store](LmdbRec) Starting KV-Store Service.")
-    (if (some? kvs-db)
-      kvs-db
-      (do (go (loop []
-                (let [{:keys [cmd key value k-serde v-serde]} (<! @cmd-chan)
-                      ks      (or k-serde key-serde)
-                      vs      (or v-serde val-serde)
-                      _       (log/debugf "[kv-store](LmdbRec) Serializing key: %s, val: %s" key value)
-                      key-buf (proto/serialize ks key)
-                      val-buf (proto/serialize vs value)]
-                  (with-open [txn ^Txn (.txnWrite {:ctx kvs-ctx})]
-                    (case cmd
-                      :put    (.put dbi txn key-buf val-buf)
-                      :delete (.delete dbi txn key-buf))
-                    (.commit txn)
-                    (log/debugf "[kv-store](LmdbRec) Committed key %s to KV-Store." key)))
-                (recur)))
-          (log/info "[kv-store](LmdbRec) KV-Store Service started.")
-          kvs-db)))
+
+    (do (go
+          (log/info "[kv-store](LmdbRec) Starting command channel listener.")
+          (loop [c 0]
+            (when (= (mod c 100) 0)
+              (log/debug "[kv-store](LmdbRec) Listening in go loop."))
+            (let [{:keys [ack-chan cmd key value k-serde v-serde]} (<! @cmd-chan)
+                  ks      (or k-serde @key-serde)
+                  vs      (or v-serde @val-serde)
+                  _       (log/debugf "[kv-store](LmdbRec) Serializing key: %s, val: %s" key value)
+                  key-buf (proto/serialize ks key)
+                  val-buf (proto/serialize vs value)]
+              (with-open [txn ^Txn (.txnWrite  (:ctx kvs-ctx))]
+                (case cmd
+                  :put    (do
+                            (.put dbi txn key-buf val-buf (make-array PutFlags 1))
+                            (log/debugf "[kv-put](LmdbRec) put call made for key: %s, awaiting completion of transaction." key))
+                  :delete (do
+                            (.delete dbi txn key-buf)
+                            (log/debugf "[kv-delete](LmdbRec) delete call made for key: %s, awating completion of transaction." key)))
+                (.commit txn)
+                (when (some? ack-chan)
+                  (>! ack-chan {:key key :written? true}))
+                (log/debugf "[kv-store](LmdbRec) Committed key %s to KV-Store." key)))
+            (recur (inc c))))
+        (log/info "[kv-store](LmdbRec) KV-Store Service started.")
+        kvs-db))
   (stop [kvs-db]
     (log/info "[kv-store](LmdbRec) Shutting down KV-Store Service.")
     (when (some? @cmd-chan)
@@ -71,7 +80,7 @@
     (log/info "[kv-store](LmdbRec) KV-Store Service shut-down complete.")
     kvs-db)
 
-  
+
   (set-key-serde [kvs-db key-serde]
     (reset! (:key-serde kvs-db) key-serde)
     kvs-db)
@@ -81,16 +90,56 @@
     kvs-db)
 
   (kv-put [kvs-db key value]
-    (go (>! @cmd-chan {:cmd :put
-                       :key    key
-                       :value  value})))
+    (log/debugf "[kv-put](LmdbRec) Putting key: %s with value: %s" key value)
+    (let [one-shot-ack-chan (chan 1)]
+      (go (log/debug "[kv-put](LmdbRec) Using go block to send key and value over command channel.")
+          (>! @cmd-chan {:ack-chan one-shot-ack-chan
+                         :cmd      :put
+                         :key      key
+                         :value    value}))
+      (let [res (<!! one-shot-ack-chan)]
+        (log/debugf "[kv-put](LmdbRec) Received acknowledgement of key written: %s" res)
+        res)))
 
   (kv-put [kvs-db key value key-serde val-serde]
-    (go (>! @cmd-chan {:cmd :put
-                       :key key
-                       :value value
-                       :k-serde key-serde
-                       :v-serde val-serde})))
+    (log/debugf "[kv-put](LmdbRec) Putting key: %s with value: %s" key value)
+    (log/debugf "[kv-put](LmdbRec) Using provided key SerDe of type: %s and value SerDe of: %s" (type key-serde) (type val-serde))
+    (let [one-shot-ack-chan (chan 1)]
+      (go (log/debug "[kv-put](LmdbRec) Using go block to send key and value over command channel.")
+          (>! @cmd-chan {:ack-chan one-shot-ack-chan
+                         :cmd      :put
+                         :key      key
+                         :value    value
+                         :k-serde  key-serde
+                         :v-serde  val-serde}))
+      (let [res (<!! one-shot-ack-chan)]
+        (log/debugf "[kv-put](LmdbRec) Received acknowledgement of key written: %s" res)
+        res)))
+
+  (kv-put-async [kvs-db key value]
+    (log/debugf "[kv-put-async](LmdbRec) Putting key: %s with value: %s" key value)
+    (let [one-shot-ack-chan (chan 1)]
+      (go (log/debug "[kv-put](LmdbRec) Using go block to send key and value over command channel.")
+          (>! @cmd-chan {:ack-chan one-shot-ack-chan
+                         :cmd      :put
+                         :key      key
+                         :value    value}))
+      (log/debugf "[kv-put-async](LmdbRec) Returning async channel for consumer to listen for acknowledgement.")
+      one-shot-ack-chan))
+
+  (kv-put-async [kvs-db key value key-serde val-serde]
+    (log/debugf "[kv-put-async](LmdbRec) Putting key: %s with value: %s" key value)
+    (log/debugf "[kv-put-async](LmdbRec) Using provided key SerDe of type: %s and value SerDe of: %s" (type key-serde) (type val-serde))
+    (let [one-shot-ack-chan (chan 1)]
+      (go (log/debug "[kv-put](LmdbRec) Using go block to send key and value over command channel.")
+          (>! @cmd-chan {:ack-chan one-shot-ack-chan
+                         :cmd      :put
+                         :key      key
+                         :value    value
+                         :k-serde  key-serde
+                         :v-serde  val-serde}))
+      (log/debugf "[kv-put-async](LmdbRec) Returning async channel for consumer to listen for acknowledgement.")
+      one-shot-ack-chan))
 
   (set-pre-get-hook [this pre-fn]
     (reset! (:pre-get-hook-fn this) pre-fn)
@@ -98,19 +147,21 @@
 
   (kv-get [kvs-db key]
     (log/debugf "[kv-get](LmdbRec) Retrieving key %s from KV-Store." key)
-    (with-open [txn ^Txn (.txnRead {:ctx kvs-ctx})]
-      (let [key-buf (proto/serialize key-serde key)
-            found   (.get dbi txn key-buf)]
+    (log/debugf "[kv-get](LmdbRec) (:ctx kvs-ctx) type is: %s" (type (:ctx kvs-ctx)))
+    (log/debugf "[kv-get](LmdbRec) (:ctx kvs-ctx) value is: %s" {:ctx kvs-ctx})
+    (with-open [txn ^Txn (.txnRead (:ctx kvs-ctx))]
+      (let [key-buf    (proto/serialize @key-serde (pre-process-key-for-get key @pre-get-hook-fn))
+            found      (.get dbi txn key-buf)]
         (if (some? found)
-          (proto/deserialize val-serde found)
+          (proto/deserialize @val-serde found)
           nil))))
 
   (kv-get [kvs-db key k-serde v-serde]
     (log/debugf "[kv-get](LmdbRec) Retrieving key %s from KV-Store with provided SerDes." key)
-    (let [ks      (or k-serde (:key-serde kvs-db))
-          vs      (or v-serde (:val-serde kvs-db))]
-      (with-open [txn ^Txn (.txnRead {:ctx kvs-ctx})]
-        (let [key-buf (proto/serialize ks key)
+    (let [ks         (or k-serde @(:key-serde kvs-db))
+          vs         (or v-serde @(:val-serde kvs-db))]
+      (with-open [txn ^Txn (.txnRead (:ctx kvs-ctx))]
+        (let [key-buf (proto/serialize ks (pre-process-key-for-get key @pre-get-hook-fn))
               found   (.get dbi txn key-buf)]
           (if (some? found)
             (proto/deserialize vs found)
@@ -125,6 +176,20 @@
       (go (>! @cmd-chan {:cmd    :delete
                          :key     key
                          :k-serde ks})))))
+
+(defn- pre-process-key-for-get [key pre-get-hook-fn]
+  (log/debugf "[pre-process-key-for-get] key: %s" key)
+  (log/debugf "[pre-process-key-for-get] pre-get-hook-fn type: %s" (type pre-get-hook-fn))
+  (let [pre-key-fn (if (some? pre-get-hook-fn)
+                     pre-get-hook-fn
+                     nil)]
+    (if (some? pre-key-fn)
+      (let [transformed-key (pre-key-fn key)]
+        (if (nil? transformed-key)
+          (throw (ex-info "[pre-get-hook-fn] The pre-get-hook-fn provided returned an unusable key for performing a kv-get operation on the KV-Store."
+                          {:cause #{:invalid-response-from-pre-get-hook-fn}}))
+          transformed-key))
+      key)))
 
 (defn create-kv-store-context [{:keys [intracel.kv-store.lmdb/storage-path
                                        intracel.kv-store.lmdb/keyspace-max-mem-size
@@ -174,10 +239,12 @@
                       new-db    ^Dbi (.openDbi (:ctx kvs-ctx) db-name dbi-flags)
                       instance  (map->LmdbRec {:cmd-chan        (atom (configure-channel chan-opts))
                                                :dbi             new-db
-                                               :key-serde       (atom (serde/string-serde max-key-size))
+                                               :key-serde       (atom (serde/string-serde))
                                                :kvs-ctx         kvs-ctx
+                                               :max-key-size    max-key-size
                                                :pre-get-hook-fn (atom pre-get-hook-fn)
-                                               :val-serde       (atom (serde/string-serde 1024))})
+                                               :val-serde       (atom (serde/string-serde))})
+                      _         (log/debug "[db] Starting Database Instance")
                       started   (proto/start instance)]
                   (swap! (:db-instances this) assoc db-name started)
                   instance))]

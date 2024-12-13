@@ -5,7 +5,7 @@
 
 (def UTF_8 StandardCharsets/UTF_8)
 
-(defrecord StringSerde [byte-capacity]
+(defrecord StringSerde []
   proto/KVSerde 
   (serialize [this data] 
     (let [bytes (.getBytes data)

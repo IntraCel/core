@@ -1,0 +1,103 @@
+Date : 2024-12-12 23:10:21
+Directory : /home/jared/dev/projects/intracel/core
+Total : 34 files,  1371 codes, 166 comments, 225 blanks, all 1762 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| Clojure            |         27 |      1,310 |        164 |        203 |      1,677 |
+| Markdown           |          3 |         32 |          0 |         22 |         54 |
+| JSON with Comments |          1 |         26 |          0 |          0 |         26 |
+| Shell Script       |          3 |          3 |          2 |          0 |          5 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                     | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                        |         34 |      1,371 |        166 |        225 |      1,762 |
+| . (Files)                                                                                                |          7 |         74 |          2 |         22 |         98 |
+| .clj-kondo                                                                                               |          2 |         38 |          0 |          5 |         43 |
+| .clj-kondo/imports                                                                                       |          2 |         38 |          0 |          5 |         43 |
+| .clj-kondo/imports/taoensso                                                                              |          2 |         38 |          0 |          5 |         43 |
+| .clj-kondo/imports/taoensso/encore                                                                       |          2 |         38 |          0 |          5 |         43 |
+| .clj-kondo/imports/taoensso/encore (Files)                                                               |          1 |          4 |          0 |          1 |          5 |
+| .clj-kondo/imports/taoensso/encore/taoensso                                                              |          1 |         34 |          0 |          4 |         38 |
+| components                                                                                               |         23 |      1,249 |        164 |        192 |      1,605 |
+| components/api                                                                                           |          3 |        203 |          0 |         22 |        225 |
+| components/api (Files)                                                                                   |          1 |          4 |          0 |          1 |          5 |
+| components/api/src                                                                                       |          1 |        194 |          0 |         19 |        213 |
+| components/api/src/clj                                                                                   |          1 |        194 |          0 |         19 |        213 |
+| components/api/src/clj/intracel                                                                          |          1 |        194 |          0 |         19 |        213 |
+| components/api/src/clj/intracel/api                                                                      |          1 |        194 |          0 |         19 |        213 |
+| components/api/src/clj/intracel/api/interface                                                            |          1 |        194 |          0 |         19 |        213 |
+| components/api/test                                                                                      |          1 |          5 |          0 |          2 |          7 |
+| components/api/test/clj                                                                                  |          1 |          5 |          0 |          2 |          7 |
+| components/api/test/clj/intracel                                                                         |          1 |          5 |          0 |          2 |          7 |
+| components/api/test/clj/intracel/api                                                                     |          1 |          5 |          0 |          2 |          7 |
+| components/kv-store                                                                                      |          5 |        408 |         90 |         68 |        566 |
+| components/kv-store (Files)                                                                              |          1 |          6 |          0 |          2 |          8 |
+| components/kv-store/.calva                                                                               |          1 |          3 |          0 |          1 |          4 |
+| components/kv-store/.calva/output-window                                                                 |          1 |          3 |          0 |          1 |          4 |
+| components/kv-store/src                                                                                  |          2 |        359 |         90 |         61 |        510 |
+| components/kv-store/src/clj                                                                              |          2 |        359 |         90 |         61 |        510 |
+| components/kv-store/src/clj/intracel                                                                     |          2 |        359 |         90 |         61 |        510 |
+| components/kv-store/src/clj/intracel/kv_store                                                            |          2 |        359 |         90 |         61 |        510 |
+| components/kv-store/test                                                                                 |          1 |         40 |          0 |          4 |         44 |
+| components/kv-store/test/clj                                                                             |          1 |         40 |          0 |          4 |         44 |
+| components/kv-store/test/clj/intracel                                                                    |          1 |         40 |          0 |          4 |         44 |
+| components/kv-store/test/clj/intracel/kv_store                                                           |          1 |         40 |          0 |          4 |         44 |
+| components/serde                                                                                         |         15 |        638 |         74 |        102 |        814 |
+| components/serde (Files)                                                                                 |          1 |          4 |          0 |          1 |          5 |
+| components/serde/src                                                                                     |         13 |        415 |         73 |         85 |        573 |
+| components/serde/src/clj                                                                                 |         13 |        415 |         73 |         85 |        573 |
+| components/serde/src/clj/intracel                                                                        |         13 |        415 |         73 |         85 |        573 |
+| components/serde/src/clj/intracel/serde                                                                  |         13 |        415 |         73 |         85 |        573 |
+| components/serde/test                                                                                    |          1 |        219 |          1 |         16 |        236 |
+| components/serde/test/clj                                                                                |          1 |        219 |          1 |         16 |        236 |
+| components/serde/test/clj/intracel                                                                       |          1 |        219 |          1 |         16 |        236 |
+| components/serde/test/clj/intracel/serde                                                                 |          1 |        219 |          1 |         16 |        236 |
+| docs                                                                                                     |          2 |         10 |          0 |          6 |         16 |
++----------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                                                 | language           | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| /home/jared/dev/projects/intracel/core/.clj-kondo/imports/taoensso/encore/config.edn                     | Clojure            |          4 |          0 |          1 |          5 |
+| /home/jared/dev/projects/intracel/core/.clj-kondo/imports/taoensso/encore/taoensso/encore.clj            | Clojure            |         34 |          0 |          4 |         38 |
+| /home/jared/dev/projects/intracel/core/README.md                                                         | Markdown           |         22 |          0 |         16 |         38 |
+| /home/jared/dev/projects/intracel/core/components/api/deps.edn                                           | Clojure            |          4 |          0 |          1 |          5 |
+| /home/jared/dev/projects/intracel/core/components/api/src/clj/intracel/api/interface/protocols.clj       | Clojure            |        194 |          0 |         19 |        213 |
+| /home/jared/dev/projects/intracel/core/components/api/test/clj/intracel/api/interface_test.clj           | Clojure            |          5 |          0 |          2 |          7 |
+| /home/jared/dev/projects/intracel/core/components/kv-store/.calva/output-window/output.calva-repl        | Clojure            |          3 |          0 |          1 |          4 |
+| /home/jared/dev/projects/intracel/core/components/kv-store/deps.edn                                      | Clojure            |          6 |          0 |          2 |          8 |
+| /home/jared/dev/projects/intracel/core/components/kv-store/src/clj/intracel/kv_store/interface.clj       | Clojure            |        100 |          1 |         25 |        126 |
+| /home/jared/dev/projects/intracel/core/components/kv-store/src/clj/intracel/kv_store/lmdb.clj            | Clojure            |        259 |         89 |         36 |        384 |
+| /home/jared/dev/projects/intracel/core/components/kv-store/test/clj/intracel/kv_store/interface_test.clj | Clojure            |         40 |          0 |          4 |         44 |
+| /home/jared/dev/projects/intracel/core/components/serde/deps.edn                                         | Clojure            |          4 |          0 |          1 |          5 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/big_decimal_serde.clj     | Clojure            |         19 |          7 |          4 |         30 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/big_int_helper.clj        | Clojure            |         30 |          4 |          5 |         39 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/big_int_serde.clj         | Clojure            |         13 |          0 |          4 |         17 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/byte_serde.clj            | Clojure            |         24 |          8 |          4 |         36 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/double_serde.clj          | Clojure            |         23 |          7 |          4 |         34 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/float_serde.clj           | Clojure            |         23 |          7 |          4 |         34 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/int_serde.clj             | Clojure            |         23 |          7 |          4 |         34 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/interface.clj             | Clojure            |        103 |          0 |         27 |        130 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/long_serde.clj            | Clojure            |         22 |          7 |          4 |         33 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/nippy_serde.clj           | Clojure            |         25 |          4 |          3 |         32 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/short_serde.clj           | Clojure            |         23 |          7 |          4 |         34 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/string_serde.clj          | Clojure            |         18 |          6 |          4 |         28 |
+| /home/jared/dev/projects/intracel/core/components/serde/src/clj/intracel/serde/uint_128_serde.clj        | Clojure            |         69 |          9 |         14 |         92 |
+| /home/jared/dev/projects/intracel/core/components/serde/test/clj/intracel/serde/interface_test.clj       | Clojure            |        219 |          1 |         16 |        236 |
+| /home/jared/dev/projects/intracel/core/core.code-workspace                                               | JSON with Comments |         26 |          0 |          0 |         26 |
+| /home/jared/dev/projects/intracel/core/deps.edn                                                          | Clojure            |         14 |          0 |          5 |         19 |
+| /home/jared/dev/projects/intracel/core/docs/kv-store.md                                                  | Markdown           |          2 |          0 |          0 |          2 |
+| /home/jared/dev/projects/intracel/core/docs/polylith.md                                                  | Markdown           |          8 |          0 |          6 |         14 |
+| /home/jared/dev/projects/intracel/core/get-clj-doc-container.sh                                          | Shell Script       |          1 |          1 |          0 |          2 |
+| /home/jared/dev/projects/intracel/core/run-local-clj-doc.sh                                              | Shell Script       |          1 |          1 |          0 |          2 |
+| /home/jared/dev/projects/intracel/core/set-jvm-opts.sh                                                   | Shell Script       |          1 |          0 |          0 |          1 |
+| /home/jared/dev/projects/intracel/core/workspace.edn                                                     | Clojure            |          9 |          0 |          1 |         10 |
+| Total                                                                                                    |                    |      1,371 |        166 |        225 |      1,762 |
++----------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+

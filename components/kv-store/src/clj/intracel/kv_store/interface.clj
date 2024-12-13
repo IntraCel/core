@@ -68,10 +68,14 @@ to use the component."
   "Returns a hosted embedded database. See [[clj.intracel.api.kv-store/KVStoreDb]].
   
   Depends on: [[create-kv-store-db-context]]"
-  ([kvs-db-ctx db-name db-opts]
-   (db kvs-db-ctx db-name db-opts nil))
-  ([kvs-db-ctx db-name db-opts pre-get-hook-fn]
-   (proto/db kvs-db-ctx db-name db-opts pre-get-hook-fn)))
+  ([kvs-db-ctx db-name]
+   (db kvs-db-ctx db-name nil))
+  ([kvs-db-ctx db-name chan-opts]
+   (db kvs-db-ctx db-name chan-opts nil))
+  ([kvs-db-ctx db-name chan-opts db-opts]
+   (db kvs-db-ctx db-name chan-opts db-opts nil))
+  ([kvs-db-ctx db-name chan-opts db-opts pre-get-hook-fn]
+   (proto/db kvs-db-ctx db-name chan-opts db-opts pre-get-hook-fn)))
 
 (defn set-key-serde
   "Sets the default key SerDe used for serializing and deserializing to and from the database. See [[clj.intracel.api.kv-store/KVStoreDb]].
