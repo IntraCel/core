@@ -92,13 +92,25 @@ Depends on: [[db]]"
   (proto/set-val-serde kvs-db val-serde))
 
 (defn kv-put
-  "Puts a value into the KV-Store. This is a multi-arity function with the 3-parameter version using the default SerDe (see [[set-key-serde]], [[set-val-serde]]) and the 5-parameter version allowing the caller to provide its own key and value SerDes. See [[clj.intracel.api.kv-store/KVStoreDb]].
+  "Puts a value into the KV-Store. 
+   This is a multi-arity function with the 3-parameter version using the default SerDe (see [[set-key-serde]], [[set-val-serde]]) and the 5-parameter version allowing the caller to provide its own key and value SerDes. See [[clj.intracel.api.kv-store/KVStoreDb]].
 
 Depends on: [[db]]."
   ([^KVStoreDbiApi kvs-db key value]
    (proto/kv-put kvs-db key value))
-  ([^KVStoreDbiApi kvs-db value ^KVSerde key-serde ^KVSerde val-serde]
+  ([^KVStoreDbiApi kvs-db key value ^KVSerde key-serde ^KVSerde val-serde]
    (proto/kv-put kvs-db key value key-serde val-serde)))
+
+(defn kv-put-async
+  "Puts a value into the KV-Store asynchronously returning a core.async channel that can be used to check when the put completes. 
+   This is a multi-arity function with the 3-parameter version using the default SerDe (see [[set-key-serde]], [[set-val-serde]]) and the 5-parameter version allowing the caller to provide its own key and value SerDes. See [[clj.intracel.api.kv-store/KVStoreDb]].
+
+Depends on: [[db]]."
+  ([^KVStoreDbiApi kvs-db key value]
+   (proto/kv-put-async kvs-db key value))
+  ([^KVStoreDbiApi kvs-db key value ^KVSerde key-serde ^KVSerde val-serde]
+   (proto/kv-put-async kvs-db key value key-serde val-serde)))
+
 
 (defn set-pre-get-hook
   "This enables the caller to customize the behavior performed when doing a key look-up in [[kv-get]] by allowing caller code to pre-process the key. See [[clj.intracel.api.kv-store/KVStoreDb]].
