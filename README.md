@@ -8,14 +8,14 @@ All of this adds up to technical debt. Tech debt is just like credit, buy now, p
 ### Data Explosion
 With the advent of Big Data and AI, our world is experiencing an explosion of data. In an article published by [G2](https://www.g2.com/articles/big-data-statistics), it is estimated that in 2025, the world will produce 463 ZB (Zeta Bytes, that's 463,000,000,000,000,000,000,000 [21 zeros] Bytes) every day at a worth of over $220 billion. 
 
-Every 60 seconds, over 5 billion people are using the Internet, creating new data. In those same 60 seconds, 16 million text messages are sent. Over $400k is spent on Amazon by customers in that time, and 500 hours of video are uploaded to YouTube. The average company now wrangles with 400 different data sources!
+Every 60 seconds .. 
+![The Data Explosion](docs/images/Internet-in-60-Seconds.drawio.png "The Data Explosion")
 
+The average company now wrangles with _400_ different data sources!
 
-* Why Do I Have to Keep Copying it All Over?
-* 
 
 ## Who is IntraCel For?
-In the end, software is really about helping people solve real-world problems. IntraCel is a Clojure library that's meant to help engineers have powerful functional tools to make managing easier. Clojure is functional, flexible, and fast and fits most software needs like a glove. 
+In the end, software is really about helping people solve real-world problems. IntraCel is a Clojure library that's meant to help engineers have powerful functional tools to make managing those problems easier. Clojure is functional, flexible, and fast and fits most software needs like a glove. 
 
 The development team behind IntraCel has been developing in Clojure for almost a decade and wants to share the love. That's why the heart of IntraCel will always remain open source. We want the Clojure community to expand. Others need to see what they've been missing! 
 
