@@ -15,7 +15,8 @@ The average company now wrangles with _400_ different data sources!
 
 
 ## Who is IntraCel For?
-In the end, software is really about helping people solve real-world problems. IntraCel is a Clojure library that's meant to help engineers have powerful functional tools to make managing those problems easier. Clojure is functional, flexible, and fast and fits most software needs like a glove. 
+In the end, software is really about helping people solve real-world problems. 
+IntraCel is a Clojure library that's meant to help engineers have powerful functional tools to make managing those problems easier. Clojure is functional, flexible, and fast and fits most software needs like a glove. 
 
 The development team behind IntraCel has been developing in Clojure for almost a decade and wants to share the love. That's why the heart of IntraCel will always remain open source. We want the Clojure community to expand. Others need to see what they've been missing! 
 
@@ -25,8 +26,14 @@ IntraCel is an approachable library that encourages good design and lets you, th
 [![Reducing The Cost of Being Wrong](https://img.youtube.com/vi/RHbZk4qGazE/0.jpg)](https://www.youtube.com/watch?v=RHbZk4qGazE)
 
 ### Red Pill or Blue Pill?
+In the movie, The Matrix, Neo was given a choice. The blue pill would let him go back to his regular life like nothing was wrong. The red pill would show him the truth he wouldn't be able to unsee.
+Unfortunately, for software engineers building modern software, the blue pill means just avoiding the inevitable deluge of data. Software that isn't designed to support data-intensive tasks will have to deal with redesigning architecture **_AFTER_** it's been released. 
 
-## Good Design Is About Planning Ahead for Inevitable Growth
+Kent Beck, one of the creators of Agile, explains that the initial investment in building software pales in comparison to the cost of maintaining it. He explains that the cost to maintain it is directly related to the cost of coupling in the system. That is when a change to one component cascades a change to another component, which would cascade to another component, and so on. 
+
+IntraCel believes that good software design embraces decoupling wherever possible. While it comes with out-of-the-box capabilities built on embedded systems, it uses protocols and interfaces to decouple design from implementations. This makes it simpler to change over time and encourages good practices.
+
+## Good Design Is About Planning Ahead for Unavoidable Growth
 
 # IntraCel Arms You With Years of Architectural Experience
 
