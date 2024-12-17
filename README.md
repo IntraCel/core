@@ -1,3 +1,5 @@
+[Getting Started](#getting-started)
+
 # The Data Problem You Knew Was Coming
 ### Shortcuts and Technical Debt
 Most greenfield projects never start out with the intent to include bad design. Experienced engineers have already spent way too much time dealing with the problems left behind by others. This time, it's going to be different! 
@@ -31,14 +33,17 @@ Unfortunately, for software engineers building modern software, the blue pill me
 
 Kent Beck, one of the creators of Agile, explains that the initial investment in building software pales in comparison to the cost of maintaining it. He explains that the cost to maintain it is directly related to the cost of coupling in the system. That is when a change to one component cascades a change to another component, which would cascade to another component, and so on. 
 
-IntraCel believes that good software design embraces decoupling wherever possible. While it comes with out-of-the-box capabilities built on embedded systems, it uses protocols and interfaces to decouple design from implementations. This makes it simpler to change over time and encourages good practices.
+IntraCel engineers have taken the red pill. The concepts built into the library believe that good software design embraces decoupling wherever possible. While it comes with out-of-the-box capabilities built on embedded systems, it uses protocols and interfaces to decouple design from implementations. This makes it simpler to change over time and encourages good practices. IntraCel leverages Clojure's innate capabilities of concurrency and unmatched processing power to do data-intensive tasks quickly and reliably.
 
-## Good Design Is About Planning Ahead for Unavoidable Growth
+## Getting Started
+Here's how to get started with IntraCel/core
+
+<!--## Good Design Is About Planning Ahead for Unavoidable Growth
 
 # IntraCel Arms You With Years of Architectural Experience
 
 ## IntraCel Prepares You For the Data Explosion
 
-## IntraCel Is Built By Engineers Who Care About Cost
+## IntraCel Is Built By Engineers Who Care About Cost -->
 
 
