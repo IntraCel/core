@@ -29,14 +29,49 @@ IntraCel is an approachable library that encourages good design and lets you, th
 
 ### Red Pill or Blue Pill?
 In the movie, The Matrix, Neo was given a choice. The blue pill would let him go back to his regular life like nothing was wrong. The red pill would show him the truth he wouldn't be able to unsee.
-Unfortunately, for software engineers building modern software, the blue pill means just avoiding the inevitable deluge of data. Software that isn't designed to support data-intensive tasks will have to deal with redesigning architecture **_AFTER_** it's been released. 
+Unfortunately, for software engineers building modern software, the blue pill means just avoiding the inevitable deluge of data. Software that isn't designed to support data-intensive tasks will have to deal with redesigning architecture **_AFTER_** it's been released. That's a one way ticket to pain!
 
 Kent Beck, one of the creators of Agile, explains that the initial investment in building software pales in comparison to the cost of maintaining it. He explains that the cost to maintain it is directly related to the cost of coupling in the system. That is when a change to one component cascades a change to another component, which would cascade to another component, and so on. 
 
 IntraCel engineers have taken the red pill. The concepts built into the library believe that good software design embraces decoupling wherever possible. While it comes with out-of-the-box capabilities built on embedded systems, it uses protocols and interfaces to decouple design from implementations. This makes it simpler to change over time and encourages good practices. IntraCel leverages Clojure's innate capabilities of concurrency and unmatched processing power to do data-intensive tasks quickly and reliably.
 
-## Getting Started
-Here's how to get started with IntraCel/core
+# Getting Started
+## Latest Releases
+
+## Setup
+
+Add the [relevant dependency](#latest-releases) to your project:
+
+```clojure
+Leiningen: [clj.intracel/core               "x-y-z"] ; or
+deps.edn:   clj.intracel/core {:mvn/version "x-y-z"}
+```
+
+## JVM Settings
+IntraCel has a Key/Value database called the KV-Store that runs on [LMDB](https://en.wikipedia.org/wiki/Lightning_Memory-Mapped_Database), an embedded database that uses memory mapping techiques to treat the computer's memory as a single address space that can be shared across multiple processes or threads while keeping a small footprint on the system. It's initial deployment was used in OpenLDAP, but its effecient design and low touch configuration made it a fit for many use cases. In fact LMDB can be found running in one of the most popular databases in the world where it was used to make the in-memory store Redis persist data on disk.
+
+IntraCel works on top of the [lmdbjava](https://github.com/lmdbjava/lmdbjava) project, utilizing a well-built JNI integration with LMDB's C API. Since LMDB is an embedded database written in native code, the JVM_OPTS environment variable needs to be adjusted to support LMDB's memory mapping. A snippet is provided showing the proper settings.
+
+### Export with Environment Variable
+
+```bash
+export JVM_OPTS="--add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED"
+```
+
+### Source Environment Variable with Shell Script
+Within the root of the core project, there is a shell script called ```set-jvm-opts.sh``` that can be invoked from the shell when running tests just using the ```source``` command on *NIX based systems as seen in this example:
+```bash
+source ./set-jvm-opts.sh
+```
+
+### Set Environment Variable in Calva
+For those who use Calva and VS Code and want to run IntraCel with LMDB, there is an example of how to get that setting to work in the ```core.code-workspace``` file that can ensure that your REPL will work properly:
+```JSON
+"calva.jackInEnv": {
+	"JAVA_OPTS": "--add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED"
+}
+```
+
 
 <!--## Good Design Is About Planning Ahead for Unavoidable Growth
 
