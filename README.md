@@ -89,6 +89,25 @@ API definitions and common data types can be found in the namespace: ```clj.intr
 
 Since ```KVStoreContext``` implements ```Closeable```, it can be used inside a ```(with-open [])``` block to allow it to be closed automatically when it goes out of scope. Developers may want to keep the ```KVStoreContext``` in a long-lived application since it is strongly recommended only have one per JVM process. Instead of running it inside of a with block, it could easily be used in something like [a stateful component](https://github.com/stuartsierra/component) where the ```(.close)``` function could be called as the component's ```(stop [])``` function gets automatically invoked [see the Lifecycle protocol for more details](https://github.com/stuartsierra/component/blob/master/src/com/stuartsierra/component.cljc#L5).
 
+```clojure
+(require '[com.stuarsierra.component :as component])
+(require '[clj.intracel.kv-store.interfce :as kv-store])
+
+(defrecord MyCtx [kvs-ctx]
+    component/Lifecycle
+    (start [this] this)
+    (stop [this] 
+        (when (some? kvs-ctx)
+            (.stop kvs-ctx))
+        this))
+
+(defn create-my-ctx []
+    ;;Or create a system and inject kvs-ctx into this component with (system-using)
+    (map->MyCtx {:kvs-ctx (kv-store/create-kv-store-context {:intracel.kv-store/type :lmdb
+                                                         :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb/")})})
+)
+```
+
 The ```clj.intracel.kv-store.interface``` namespace in the example is given the alias ```kv-store``` here. We'll use this to keep things simpler. The ```kv-store``` interface provides developers with a constructor function to create the ```KVStoreContext``` with the ```(create-kv-store-context)``` function. This accepts a single parameter map called ```ctx-opts```. At present, the ```KVStoreContext``` has a single implementation built on LMDB so the first key in the map ```:intracel.kv-store/type``` is set to ```:lmdb```. The second key in the map ```:intracel.kv-store.lmdb/storage-path``` configures the ```KVStoreContext``` to know where to persist data to disk for database instances. In the example here, it's just using the default location for the temp directory on the operating system.
 
 
