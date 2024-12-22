@@ -83,12 +83,14 @@ The KV-Store is capable of hosting multiple embedded database instances in the p
     ;;Start using your context here
 	)
 ```
-First, require the ```clj.intracel.kv-store.interface``` namespace. IntraCel is built in the popular polylith style monorepo so you'll see naming conventions that come from that architecture here (e.g. - API's within an interface namespace). The public interface to interact with the ```KVStoreContext``` resides here.
+1. Require the ```clj.intracel.kv-store.interface``` namespace. IntraCel is built in the popular polylith style monorepo so you'll see naming conventions that come from that architecture here (e.g. - API's within an interface namespace). The public interface to interact with the ```KVStoreContext``` resides here.
+   API definitions and common data types can be found in the namespace: ```clj.intracel.api.interface.protocols```. The definition for the ```KVStoreContext``` can be found in: ```clj.intracel.api.interface/KVStoreContext```. It's basically a ```defrecord``` that implements Java's ```Closeable``` interface and contains the instance of hosting environment to spawn multiple database instances. 
 
-API definitions and common data types can be found in the namespace: ```clj.intracel.api.interface.protocols```. The definition for the ```KVStoreContext``` can be found in: ```clj.intracel.api.interface/KVStoreContext```. It's basically a ```defrecord``` that implements Java's ```Closeable``` interface and contains the instance of hosting environment to spawn multiple database instances. 
+2. Since ```KVStoreContext``` implements ```Closeable```, it can be used inside a ```(with-open [])``` block to allow it to be closed automatically when it goes out of scope. 
 
-Since ```KVStoreContext``` implements ```Closeable```, it can be used inside a ```(with-open [])``` block to allow it to be closed automatically when it goes out of scope. Developers may want to keep the ```KVStoreContext``` in a long-lived application since it is strongly recommended only have one per JVM process. Instead of running it inside of a with block, it could easily be used in something like [a stateful component](https://github.com/stuartsierra/component) where the ```(.close)``` function could be called as the component's ```(stop [])``` function gets automatically invoked [see the Lifecycle protocol for more details](https://github.com/stuartsierra/component/blob/master/src/com/stuartsierra/component.cljc#L5).
+3. The ```clj.intracel.kv-store.interface``` namespace in the example is given the alias ```kv-store``` here. We'll use this to keep things simpler. The ```kv-store``` interface provides developers with a constructor function to create the ```KVStoreContext``` with the ```(create-kv-store-context)``` function. This accepts a single parameter map called ```ctx-opts```. At present, the ```KVStoreContext``` has a single implementation built on LMDB so the first key in the map ```:intracel.kv-store/type``` is set to ```:lmdb```. The second key in the map ```:intracel.kv-store.lmdb/storage-path``` configures the ```KVStoreContext``` to know where to persist data to disk for database instances. In the example here, it's just using the default location for the temp directory on the operating system.
 
+### Alternate Way to Create the KVStoreContext with Component
 ```clojure
 (require '[com.stuarsierra.component :as component])
 (require '[clj.intracel.kv-store.interfce :as kv-store])
@@ -107,11 +109,34 @@ Since ```KVStoreContext``` implements ```Closeable```, it can be used inside a `
                                                          :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb/")})})
 )
 ```
+Developers may want to keep the ```KVStoreContext``` in a long-lived application since it is strongly recommended only have one per JVM process. Instead of running it inside of a with block, it could easily be used in something like [a stateful component](https://github.com/stuartsierra/component) where the ```(.close)``` function could be called as the component's ```(stop [])``` function gets automatically invoked [see the Lifecycle protocol for more details](https://github.com/stuartsierra/component/blob/master/src/com/stuartsierra/component.cljc#L5).
 
-The ```clj.intracel.kv-store.interface``` namespace in the example is given the alias ```kv-store``` here. We'll use this to keep things simpler. The ```kv-store``` interface provides developers with a constructor function to create the ```KVStoreContext``` with the ```(create-kv-store-context)``` function. This accepts a single parameter map called ```ctx-opts```. At present, the ```KVStoreContext``` has a single implementation built on LMDB so the first key in the map ```:intracel.kv-store/type``` is set to ```:lmdb```. The second key in the map ```:intracel.kv-store.lmdb/storage-path``` configures the ```KVStoreContext``` to know where to persist data to disk for database instances. In the example here, it's just using the default location for the temp directory on the operating system.
+## Create A Database Instance
+```clojure
+(require '[clj.intracel.kv-store.interfce :as kv-store])
+(require '[clj.intracel.serde.interface :as kv-serdes])
 
+(with-open [kvs-ctx (kv-store/create-kv-store-context {:intracel.kv-store/type :lmdb
+                                                         :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb/")})]
+    (is (not (nil? kvs-ctx)))
+    (try (let [kvs-db-ctx (kv-store/create-kv-store-db-context kvs-ctx :lmdb)]
+           (is (not (nil? kvs-db-ctx)))
+           (let [dbi (kv-store/db kvs-db-ctx "sg-1" {:ic-chan-opts/buf-size 100} [:ic-db-flags/create-db-if-not-exists])]
+             (is (not (nil? dbi)))
+             (kv-store/kv-put dbi "general" "Jack O'Neil")
+             (kv-store/kv-put dbi "doctor" "Daniel Jackson")
+             (kv-store/kv-put dbi "major" "Samantha Carter")
+             (kv-store/kv-put dbi "jafa" "Teal'c")
+             (let [general (kv-store/kv-get dbi "general")]
+               (is (= "Jack O'Neil" general)))))
+         (catch Exception e
+           (prn "Error in test-kv-put: " (.getMessage e))
+           (doseq [tr (.getStackTrace e)]
+             (prn "Trace: " tr)))))
+```
 
-
+1. Like in previous examples, we'll alias the ```kv-store```. 
+2. We're going to bring in a new namespace now. The ```kv-store``` only works with raw ```java.nio.ByteBuffer```s for its keys and values. The ```clj.intracel.serde.interface``` namespace contains Serializers and Deserializers (called SerDes) to move data in and out of the kv-store using Clojure data structures. 
 
 <!--## Good Design Is About Planning Ahead for Unavoidable Growth
 
