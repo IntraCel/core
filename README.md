@@ -158,10 +158,10 @@ The final parameter is a vector containing start-up options for the database ins
 ```
 1. We'll skip through the setup of the database instance as that is described in [Create A Database Instance](#create-a-database-instance). 
 2. Focusing on the let block where we've created the binding to a ```dbi``` variable, we'll spend some time here.
-The database instance implements the ```clj.intracel.api.interface.protocols/KVStoreDbiApi``` which supports both synchronous and asynchronous API calls. In this example we'll focus on the syncrhonous API for writes. 
+The database instance implements the ```clj.intracel.api.interface.protocols/KVStoreDbiApi``` which supports both synchronous and asynchronous API calls. In this example we'll focus on the synchronous API for writes. 
 3. With our ```sg-1``` database instance ready to go, let's put some entries into it by calling the ```kv-store/kv-put``` function. This function is passed the database instance reference as its first parameter. The next two parameters are a key and a value, much like doing a put operation on a traditional HashMap.
 The ```kv-store/kv-put``` function is multi-arity and allows for the caller to customize the SerDes used for the key and the value. In this example, we're using the most basic arity which just defaults to a ```clj.intracel.serde.string-serde```.
-For the curious, each of these synchronous calls put the key/value pairs provided onto the core.async channel referred to earlier within the context of a ```go``` block. The function blocks a one-shot core.async channel waiting to hear an acknowledgment that the put completed. A snippet of that implementation on LMDB is provided for reference. 
+For the curious, each of these synchronous calls put the key/value pairs provided onto the core.async channel referred to earlier within the context of a ```go``` block. The function blocks on a one-shot core.async channel waiting to hear an acknowledgment that the put completed. A snippet of that implementation on LMDB is provided for reference. 
 ```clojure 
 (kv-put [kvs-db key value]
     (log/debugf "[kv-put](LmdbRec) Putting key: %s with value: %s" key value)
@@ -175,7 +175,7 @@ For the curious, each of these synchronous calls put the key/value pairs provide
         (log/debugf "[kv-put](LmdbRec) Received acknowledgement of key written: %s" res)
         res)))
 ```
-4. Once data is written to the database instance, it can be retrieved using the ```kv-store/kv-get``` function. This function also takes the database instance as the first parameter. Its second is the key the caller is looking for in the database (```general```). Like it's sibling, the ```kb-get``` function is also multi-arity and allows the caller to customize the SerDes it uses on both the key and the value. When not provided, it also defaults to a ```clj.intracel.serde.string-serde```.
+4. Once data is written to the database instance, it can be retrieved using the ```kv-store/kv-get``` function. This function also takes the database instance as the first parameter. Its second is the key the caller is looking for in the database (```general```). Like its sibling, the ```kb-get``` function is also multi-arity and allows the caller to customize the SerDes it uses on both the key and the value. When not provided, it also defaults to a ```clj.intracel.serde.string-serde```.
 <!--## Good Design Is About Planning Ahead for Unavoidable Growth
 
 # IntraCel Arms You With Years of Architectural Experience
