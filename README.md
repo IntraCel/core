@@ -118,17 +118,10 @@ Developers may want to keep the ```KVStoreContext``` in a long-lived application
 
 (with-open [kvs-ctx (kv-store/create-kv-store-context {:intracel.kv-store/type :lmdb
                                                          :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb/")})]
-    (is (not (nil? kvs-ctx)))
     (try (let [kvs-db-ctx (kv-store/create-kv-store-db-context kvs-ctx :lmdb)]
-           (is (not (nil? kvs-db-ctx)))
            (let [dbi (kv-store/db kvs-db-ctx "sg-1" {:ic-chan-opts/buf-size 100} [:ic-db-flags/create-db-if-not-exists])]
-             (is (not (nil? dbi)))
-             (kv-store/kv-put dbi "general" "Jack O'Neil")
-             (kv-store/kv-put dbi "doctor" "Daniel Jackson")
-             (kv-store/kv-put dbi "major" "Samantha Carter")
-             (kv-store/kv-put dbi "jafa" "Teal'c")
-             (let [general (kv-store/kv-get dbi "general")]
-               (is (= "Jack O'Neil" general)))))
+             ;;Do interesting things here with your database instance
+             ))
          (catch Exception e
            (prn "Error in test-kv-put: " (.getMessage e))
            (doseq [tr (.getStackTrace e)]
@@ -136,8 +129,53 @@ Developers may want to keep the ```KVStoreContext``` in a long-lived application
 ```
 
 1. Like in previous examples, we'll alias the ```kv-store```. 
-2. We're going to bring in a new namespace now. The ```kv-store``` only works with raw ```java.nio.ByteBuffer```s for its keys and values. The ```clj.intracel.serde.interface``` namespace contains Serializers and Deserializers (called SerDes) to move data in and out of the kv-store using Clojure data structures. 
+2. We're going to bring in a new namespace now. The ```kv-store``` only works with raw ```java.nio.ByteBuffer```s for its keys and values. The ```clj.intracel.serde.interface``` namespace contains Serializers and Deserializers (called SerDes) to move data in and out of the kv-store using Clojure data structures.
+3. We'll create a reference to the ```KVStoreContext```  gain and bind it to  ```kvs-db-ctx``` in our let block. 
+4. Next, we'll create a reference to a ```clj.intracel.api.interface.protocols/KVStoreDbContextApi```. This is a container that is used to generate database instances. In the context of IntraCel's KV-Store, database instances could be considered like tables in a SQL database. They should have the same key type in order to perform the same operations on them.
+This ```KVStoreDbContextApi``` instance is purpose built to support database instances that run on LMDB and accepts the reference to the ```KVStoreContext``` which it will use to help it generate database instances properly. 
+We'll bind the instance to the ```kvs-db-ctx``` variable.
+5. We'll create a datbase instance by calling teh ```kv-store/db``` function, using the reference to our ```KVStoreDbContextApi```. The second parameter is the name to give the database instance (```sg-1```). The final parameter gives the caller the ability to customize some of the behind-the-scenes implementation of the database instance. 
+Under the hood, the database instance utilizes a core.async channel to ensure that a single thread is in charge of delivering writes. This is to ensure consistency as LMDB utilizes ACID transactions. The ```:ic-chan-opts/buf-size``` key lets the caller adjust the size of the buffered channel that receives data being written. Alternatively, the caller could provide its own channel implementation by using the ```:ic-chan-opts/replacement-chan``` key instead.
+The final parameter is a vector containing start-up options for the database instance for LMDB. In this case, the ```:ic-db-flags/create-db-if-not-exists``` will start a new database file on the filesystem if this is the first time the database with the name provided is being used. 
 
+## Write to a Database Instance - Sync
+```clojure
+(with-open [kvs-ctx (kv-store/create-kv-store-context {:intracel.kv-store/type :lmdb
+                                                         :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb/")})]
+    (try (let [kvs-db-ctx (kv-store/create-kv-store-db-context kvs-ctx :lmdb)]
+           (let [dbi (kv-store/db kvs-db-ctx "sg-1" {:ic-chan-opts/buf-size 100} [:ic-db-flags/create-db-if-not-exists])]
+             (kv-store/kv-put dbi "general" "Jack O'Neil")
+             (kv-store/kv-put dbi "doctor" "Daniel Jackson")
+             (kv-store/kv-put dbi "major" "Samantha Carter")
+             (kv-store/kv-put dbi "jafa" "Teal'c")
+             (let [general (kv-store/kv-get dbi "general")]
+               (when (= "Jack O'Neil" general)
+                (prn "We found the general!")))))
+         (catch Exception e
+           (prn "Error in test-kv-put: " (.getMessage e))
+           (doseq [tr (.getStackTrace e)]
+             (prn "Trace: " tr)))))
+```
+1. We'll skip through the setup of the database instance as that is described in [Create A Database Instance](#create-a-database-instance). 
+2. Focusing on the let block where we've created the binding to a ```dbi``` variable, we'll spend some time here.
+The database instance implements the ```clj.intracel.api.interface.protocols/KVStoreDbiApi``` which supports both synchronous and asynchronous API calls. In this example we'll focus on the syncrhonous API for writes. 
+3. With our ```sg-1``` database instance ready to go, let's put some entries into it by calling the ```kv-store/kv-put``` function. This function is passed the database instance reference as its first parameter. The next two parameters are a key and a value, much like doing a put operation on a traditional HashMap.
+The ```kv-store/kv-put``` function is multi-arity and allows for the caller to customize the SerDes used for the key and the value. In this example, we're using the most basic arity which just defaults to a ```clj.intracel.serde.string-serde```.
+For the curious, each of these synchronous calls put the key/value pairs provided onto the core.async channel referred to earlier within the context of a ```go``` block. The function blocks a one-shot core.async channel waiting to hear an acknowledgment that the put completed. A snippet of that implementation on LMDB is provided for reference. 
+```clojure 
+(kv-put [kvs-db key value]
+    (log/debugf "[kv-put](LmdbRec) Putting key: %s with value: %s" key value)
+    (let [one-shot-ack-chan (chan 1)]
+      (go (log/debug "[kv-put](LmdbRec) Using go block to send key and value over command channel.")
+          (>! @cmd-chan {:ack-chan one-shot-ack-chan
+                         :cmd      :put
+                         :key      key
+                         :value    value}))
+      (let [res (<!! one-shot-ack-chan)]
+        (log/debugf "[kv-put](LmdbRec) Received acknowledgement of key written: %s" res)
+        res)))
+```
+4. Once data is written to the database instance, it can be retrieved using the ```kv-store/kv-get``` function. This function also takes the database instance as the first parameter. Its second is the key the caller is looking for in the database (```general```). Like it's sibling, the ```kb-get``` function is also multi-arity and allows the caller to customize the SerDes it uses on both the key and the value. When not provided, it also defaults to a ```clj.intracel.serde.string-serde```.
 <!--## Good Design Is About Planning Ahead for Unavoidable Growth
 
 # IntraCel Arms You With Years of Architectural Experience
