@@ -175,7 +175,57 @@ For the curious, each of these synchronous calls put the key/value pairs provide
         (log/debugf "[kv-put](LmdbRec) Received acknowledgement of key written: %s" res)
         res)))
 ```
-4. Once data is written to the database instance, it can be retrieved using the ```kv-store/kv-get``` function. This function also takes the database instance as the first parameter. Its second is the key the caller is looking for in the database (```general```). Like its sibling, the ```kb-get``` function is also multi-arity and allows the caller to customize the SerDes it uses on both the key and the value. When not provided, it also defaults to a ```clj.intracel.serde.string-serde```.
+4. Once data is written to the database instance, it can be retrieved using the ```kv-store/kv-get``` function. This function also takes the database instance as the first parameter. Its second is the key the caller is looking for in the database (```general```). Like its sibling, the ```kv-get``` function is also multi-arity and allows the caller to customize the SerDes it uses on both the key and the value. When not provided, it also defaults to a ```clj.intracel.serde.string-serde```.
+
+## Write to a Database Instance - Async
+The async functions on database instances can be really useful in data-intensive applications. They allow the caller to let Clojure schedule writes in a thread pool without waiting for each one to complete. 
+```clojure
+(with-open [kvs-ctx (kv-store/create-kv-store-context {:intracel.kv-store/type :lmdb
+                                                         :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb/")})]
+    (try (let [kvs-db-ctx (kv-store/create-kv-store-db-context kvs-ctx :lmdb)
+               ks         (kv-serdes/string-serde)
+               vs         (kv-serdes/nippy-serde)]
+           (let [dbi (kv-store/db kvs-db-ctx "sg-1" {:ic-chan-opts/buf-size 100} [:ic-db-flags/create-db-if-not-exists])]
+             (let [async-chans [(kv-store/kv-put-async dbi "general" "Jack O'Neil" ks vs)
+                                (kv-store/kv-put-async dbi "doctor" "Daniel Jackson" ks vs)
+                                (kv-store/kv-put-async dbi "major" "Samantha Carter" ks vs)
+                                (kv-store/kv-put-async dbi "jafa" "Teal'c" ks vs)]
+                   responses   (reduce (fn [acc chan]
+                                         (let [answer (<!! chan)]
+                                           (conj acc answer)))
+                                       []
+                                       async-chans)]
+               (let [keys-written (into (sorted-set) (mapv #(:key %) responses))
+                     general (kv-store/kv-get dbi "general")]
+                 (is (= (sorted-set "doctor" "general" "jafa" "major") keys-written))
+                 (is (= "Jack O'Neil" general))))))
+         (catch Exception e
+           (prn "Error in test-kv-put: " (.getMessage e))
+           (doseq [tr (.getStackTrace e)]
+             (prn "Trace: " tr)))))
+```
+1. We'll skip through the setup of the database instance as that is described in [Create A Database Instance](#create-a-database-instance). 
+2. In the let block where the ```kvs-db-ctx``` binding has been set up, we now have two SerDe instances we're using for Strings and Nippy encoded data.  
+3. With our ```sg-1``` database instance ready to go, let's put some entries into it by calling the ```kv-store/kv-put-async``` function. This function is passed the database instance reference as its first parameter. The next two parameters are a key and a value, much like doing a put operation on a traditional HashMap.
+This example uses the multi-arity form that allows for the caller to customize the SerDes used for the key and the value. By using the ```clj.intracel.serde.nippy-serde``` the caller can encode any EDN formatted data as the value.
+For the curious, each of these asynchronous calls put the key/value pairs provided onto the core.async channel referred to earlier within the context of a ```go``` block. The function passes in a one-shot core.async channel to the consumer so that when the write completes, it can put it's response back on the one-shot channel. This channel gets returned immediately from the function and allows the core.async library to schedule execution of the go block on its thread pool. 
+```clojure 
+(kv-put-async [kvs-db key value key-serde val-serde]
+    (log/debugf "[kv-put-async](LmdbRec) Putting key: %s with value: %s" key value)
+    (log/debugf "[kv-put-async](LmdbRec) Using provided key SerDe of type: %s and value SerDe of: %s" (type key-serde) (type val-serde))
+    (let [one-shot-ack-chan (chan 1)]
+      (go (log/debug "[kv-put](LmdbRec) Using go block to send key and value over command channel.")
+          (>! @cmd-chan {:ack-chan one-shot-ack-chan
+                         :cmd      :put
+                         :key      key
+                         :value    value
+                         :k-serde  key-serde
+                         :v-serde  val-serde}))
+      (log/debugf "[kv-put-async](LmdbRec) Returning async channel for consumer to listen for acknowledgement.")
+      one-shot-ack-chan))
+```
+4. Since the async put functions have returned channels, we'll reduce on them and block on each one-shot response channel to make sure everything has been written first.
+5. Once data is written to the database instance, it can be retrieved using the ```kv-store/kv-get``` function.  This function also takes the database instance as the first parameter. Its second is the key the caller is looking for in the database (```general```). Like its sibling, the ```kv-get``` function is also multi-arity and allows the caller to customize the SerDes it uses on both the key and the value. When not provided, it also defaults to a ```clj.intracel.serde.string-serde```.
 <!--## Good Design Is About Planning Ahead for Unavoidable Growth
 
 # IntraCel Arms You With Years of Architectural Experience
