@@ -14,13 +14,16 @@
            [java.nio ByteBuffer]
            [java.nio.charset StandardCharsets]
            [org.lmdbjava ByteBufferProxy Dbi DbiFlags Env EnvFlags PutFlags Txn]))
-;; In order for LMDB Java to load int memory properly, the JAVA_OPTS variable needs the 
+;; In order for LMDB Java to load into memory properly, the JVM_OPTS variable needs the 
 ;; following values set:
 ;; --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED
 ;; These have already been set in order to start Calva on VSCode with the proper settings 
-;; in core.code-workspace under jackInEnv
+;; in core.code-workspace under jackInEnv.
 
-;; This component implements a basic API that can be used to use the Lightning 
+;; If you want to run poly test :dev, you'll need to source set-jvm-opts.sh first to
+;; configure JVM_OPTS properly in your shell.
+
+;; This component implements a basic API that can use the Lightning 
 ;; Memory-mapped Database (LMDB).
 ;; This is a unique Key Value store that is incredibly fast and requires little 
 ;; tuning.

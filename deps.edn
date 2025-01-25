@@ -6,11 +6,13 @@
                                
                                poly-intracel/api          {:local/root "components/api"}
                                poly-intracel/kv-store     {:local/root "components/kv-store"}
-                               poly-intracel/serde        {:local/root "components/serde"}}}
+                               poly-intracel/serde        {:local/root "components/serde"}
+                               poly-intracel/sql-store    {:local/root "components/sql-store"}}}
 
             :test {:extra-paths ["components/api/test"
                                  "components/kv-store/test"
-                                 "components/serde/test"]
+                                 "components/serde/test"
+                                 "components/sql-store/test"]
                    :extra-deps  {org.clojure/test.check {:mvn/version "1.1.1"}}}
 
             :poly {:main-opts ["-m" "polylith.clj.core.poly-cli.core"]

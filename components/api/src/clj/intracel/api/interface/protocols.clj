@@ -211,3 +211,19 @@
     | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]||
     Returns:
     A map containing the key `deleted?` set to true or false. If false, use the `msg` key to check the error message."))
+
+;; The next.jdbc library from Sean Corefield supports the DuckDB driver.
+;; The library puts the driver into a connection pool which is perfect 
+;; for most cases. 
+;; However, if you want to bulk load data, DuckDB has a special class 
+;; called an Appender which is reallh efficient but requires the DuckDB
+;; specific driver. 
+;; We'll used the SQLStoreContext for DuckDB to hold a connection pool 
+;; and a reference to a second connection with the DuckDB driver so that 
+;; both are available. The `ctx` var will be used as a map in that case
+;; so each can be accessed easily when needed.
+(defrecord SQLStoreContext [ctx]
+  Closeable
+  (close [_]
+    (when (some? ctx)
+      (.close ctx))))
