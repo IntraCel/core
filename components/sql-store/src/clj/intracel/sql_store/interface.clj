@@ -4,13 +4,12 @@
    to use the component."
   (:require [clj.intracel.api.interface.protocols :as proto]
             [clj.intracel.sql-store.duckdb :as duckdb]
-            [next.jdbc :as jdbc]
-            [taoensso.timbre :as log])
-  (:import [com.zaxxer.hikari HikariDataSource])) 
+            )
+  )
 
 (declare new-sql-store-context)
 
-(defn create-sql-store-context 
+(defn create-sql-store-context
   "Starts up the SQL-Store context which helps to bootstrap the embedded database.
   | Parameter   | Description |
   | ------------|-------------|
@@ -25,7 +24,7 @@
   [ctx-opts]
   (proto/map->SQLStoreContext (new-sql-store-context ctx-opts)))
 
-(defmulti new-sql-store-context 
+(defmulti new-sql-store-context
   "Polymorphic constructor for producing a specific implementation that will be assigned ot the `:ctx` field in the [[clj.api.interface.protocols/SQLStoreContext]].
   This function requires the ctx-opts map to contain the `:intracel.sql-store/type` field and will determine the correct implementation to generate based on the value provided.
   | Parameter   | Description |
