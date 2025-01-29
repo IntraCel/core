@@ -65,7 +65,7 @@ to use the component."
   (lmdb/create-kv-db-context kvs-ctx))
 
 (defn db
-  "Returns a hosted embedded database. See [[clj.intracel.api.kv-store/KVStoreDb]].
+  "Returns a hosted embedded database. See [[clj.intracel.api.interface.protocols/KVStoreDbiApi]].
   
   Depends on: [[create-kv-store-db-context]]"
   ([kvs-db-ctx db-name]

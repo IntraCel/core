@@ -45,3 +45,14 @@
   ;;returns a map with :ctx set
   (duckdb/create-sql-store-context ctx-opts))
 
+(defn db 
+  "Constructor function for an embedded SQL-Store. See [[clj.intracel.api.interface.protocols/SQLStoreApi]]
+   
+  Depends on: [[cl.intracel.api.interface.protocols/SQLStoreDbContextApi]].
+  | Parameter    | Description |
+  | -------------|-------------|
+  | `sql-db-ctx` | A reference to the [[clj.intracel.api.interface.protocols/SQLStoreDbContextApi]].||
+  Returns:
+  A record that implements the [[clj.intracel.api.interface.protocols/SQLStoreApi]] with a field called `sql-ctx` that references the [[clj.intracel.api.interface.protocols/SQLStoreContext]] provided in the `sql-db-ctx` parameter."
+  [sql-db-ctx]
+  (proto/create-sql-db sql-db-ctx))

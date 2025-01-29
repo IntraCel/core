@@ -1,5 +1,6 @@
 (ns clj.intracel.sql-store.duckdb
-  (:require [clojure.java.io :as io]
+  (:require [clj.intracel.api.interface.protocols :as proto]
+            [clojure.java.io :as io]
             [clojure.string :as st]
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as connection]
@@ -38,3 +39,14 @@
         appender-conn ^DuckDBConnection (DriverManager/getConnection (str "jdbc:duckdb:" append-path) props)]
     {:ctx {:pool          pool
            :appender-conn appender-conn}}))
+
+(defrecord DuckDbRec [sql-ctx]
+  proto/SQLStoreApi
+  (bulk-load [this table-name rows]))
+
+
+
+(defrecord DuckDBContext [sql-ctx]
+  proto/SQLStoreDbContextApi
+  (create-sql-db [this]
+    (map->DuckDbRec {:sql-ctx sql-ctx})))

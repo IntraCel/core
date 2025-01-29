@@ -225,5 +225,35 @@
 (defrecord SQLStoreContext [ctx]
   Closeable
   (close [_]
-    (when (some? ctx)
-      (.close ctx))))
+    (when (some? (:pool ctx))
+      (.close (:pool ctx)))
+    (when (some? (:appender-conn ctx))
+      (.close (:appender-conn ctx)))))
+
+(defprotocol SQLStoreDbContextApi 
+  (create-sql-db [sql-db-ctx]
+    "Constructor function that produces a database specific record object containing the 
+     [[clj.intracel.api.interface.protocols/SQLStoreContext]] reference in a field called `sql-ctx`. 
+     This constructor enables multiple implementations for different embedded SQL-Stores.
+     
+     Depends on:  
+     | Parameter    | Description |
+     | -------------|-------------|
+     | `sql-db-ctx` | A reference to the `clj.intracel.api.interface.protocols/SQLStoreDbContextApi` created at initialization. ||
+     Returns:
+     A record that implements the [[clj.intracel.api.interface.protocols/SQLStoreApi]]"))
+
+(defprotocol SQLStoreApi 
+  (bulk-load [sql-db table-name rows]
+    "Bulk loads rows into the SQL-Store. The sql-db object should be a record implementing [[clj.intracel.api.interface.protocols/SQLStoreApi]] and containing a field called 
+    `sql-ctx` containing a reference to a [[clj.intracel.api.interface.protocols/SQLStoreContext]]. 
+     Call the `create-sql-db` to create this reference before calling this function.
+      
+    Depends on: [[sql-db]] 
+    | Parameter    | Description |
+    | -------------|-------------|
+    | `sql-db`     | A reference to the `clj.intracel.api.interface.protocols/SQLStoreApi` created record. |
+    | `table-name` | The name of the table to bulk load. |
+    | `rows`       | A vector of vectors containing values for the columns to insert into the table. These must be in the same order of the columns as defined in the table's schema definition.||
+    Returns:
+    A map containing the key `loaded?` set to true or false. If false, use the `msg` key to check the error message."))
