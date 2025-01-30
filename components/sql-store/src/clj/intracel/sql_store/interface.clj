@@ -4,8 +4,7 @@
    to use the component."
   (:require [clj.intracel.api.interface.protocols :as proto]
             [clj.intracel.sql-store.duckdb :as duckdb]
-            )
-  )
+            [taoensso.timbre :as log]))
 
 (declare new-sql-store-context)
 
@@ -45,7 +44,17 @@
   ;;returns a map with :ctx set
   (duckdb/create-sql-store-context ctx-opts))
 
-(defn db 
+(defmulti new-sql-store-db-context (fn [sql-ctx sql-store-type]
+                                     sql-store-type))
+
+(defmethod new-sql-store-db-context :duckdb [sql-ctx sql-store-type]
+  (log/debugf "[new-sql-store-db-context] Creating DB specific context for: %s" sql-store-type)
+  (duckdb/create-sql-store-db-context sql-ctx))
+
+(defn create-sql-store-db-context [sql-ctx sql-store-type]
+  (new-sql-store-db-context sql-ctx sql-store-type))
+
+(defn db
   "Constructor function for an embedded SQL-Store. See [[clj.intracel.api.interface.protocols/SQLStoreApi]]
    
   Depends on: [[cl.intracel.api.interface.protocols/SQLStoreDbContextApi]].

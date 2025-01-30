@@ -50,3 +50,6 @@
   proto/SQLStoreDbContextApi
   (create-sql-db [this]
     (map->DuckDbRec {:sql-ctx sql-ctx})))
+
+(defn create-sql-store-db-context [sql-ctx]
+  (map->DuckDBContext {:sql-ctx sql-ctx}))
