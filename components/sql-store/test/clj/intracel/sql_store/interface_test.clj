@@ -1,6 +1,7 @@
 (ns clj.intracel.sql-store.interface-test
   (:require [clojure.test :as test :refer :all]
-            [clj.intracel.sql-store.interface :as sql-store])
+            [clj.intracel.sql-store.interface :as sql-store]
+            [next.jdbc :as jdbc])
   (:import [java.sql DriverManager]))
 
 (deftest dummy-test
@@ -32,3 +33,17 @@
            (prn "Error in Test: " (.getMessage e))
            (doseq [tr (.getStackTrace e)]
              (prn "Trace: " tr))))))
+
+(deftest test-bulk-loading 
+  (with-open [sql-ctx (sql-store/create-sql-store-context {:intracel.sql-store/type :duckdb
+                                                           :intracel.sql-store.duckdb/storage-path (str (System/getProperty "java.io.tmpdir") "/duckdb")})]
+    (let [sql-store-db-ctx (sql-store/create-sql-store-db-context sql-ctx :duckdb)
+          db               (sql-store/db sql-store-db-ctx)]
+      (prn "db:" db)
+      (jdbc/execute! (get-in db [:sql-ctx :ctx :pool])
+                     ["CREATE OR REPLACE TABLE main.movies (title VARCHAR, year INT, rotten_tomatoes_score FLOAT)"])
+      (let [results (sql-store/bulk-load db "movies" [["Star Wars Episode V: The Empire Strikes Back" 1977 93.0]
+                                                      ["Ghostbusters" 1984 95.0]
+                                                      ["Inception" 2010 87.0]])]
+        (is (true? (:loaded? results)))
+        ))))

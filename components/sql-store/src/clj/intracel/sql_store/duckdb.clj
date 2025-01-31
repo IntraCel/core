@@ -42,7 +42,16 @@
 
 (defrecord DuckDbRec [sql-ctx]
   proto/SQLStoreApi
-  (bulk-load [this table-name rows]))
+  (bulk-load [this table-name rows]
+    (let [conn (get-in sql-ctx [:ctx :appender-conn])]
+      (with-open [appender (-> conn 
+                               (.createAppender DuckDBConnection/DEFAULT_SCHEMA
+                                                table-name))]
+        (doseq [row rows]
+          (.beginrow appender)
+          (doseq [col row]
+            (.append col))
+          (.endrow appender))))))
 
 
 

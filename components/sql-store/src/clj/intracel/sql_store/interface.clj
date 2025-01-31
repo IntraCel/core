@@ -65,3 +65,19 @@
   A record that implements the [[clj.intracel.api.interface.protocols/SQLStoreApi]] with a field called `sql-ctx` that references the [[clj.intracel.api.interface.protocols/SQLStoreContext]] provided in the `sql-db-ctx` parameter."
   [sql-db-ctx]
   (proto/create-sql-db sql-db-ctx))
+
+(defn bulk-load 
+  "Bulk loads rows into the SQL-Store. The sql-db object should be a record implementing [[clj.intracel.api.interface.protocols/SQLStoreApi]] and containing a field called 
+  `sql-ctx` containing a reference to a [[clj.intracel.api.interface.protocols/SQLStoreContext]]. 
+   Call the `create-sql-db` to create this reference before calling this function.
+        
+  Depends on: [[sql-db]] 
+  | Parameter    | Description |
+  | -------------|-------------|
+  | `sql-db`     | A reference to the `clj.intracel.api.interface.protocols/SQLStoreApi` created record. |
+  | `table-name` | The name of the table to bulk load. |
+  | `rows`       | A vector of vectors containing values for the columns to insert into the table. These must be in the same order of the columns as defined in the table's schema definition.||
+  Returns:
+  A map containing the key `loaded?` set to true or false. If false, use the `msg` key to check the error message."
+  [db table-name rows]
+  (proto/bulk-load db table-name rows))
