@@ -43,15 +43,21 @@
 (defrecord DuckDbRec [sql-ctx]
   proto/SQLStoreApi
   (bulk-load [this table-name rows]
-    (let [conn (get-in sql-ctx [:ctx :appender-conn])]
-      (with-open [appender (-> conn 
-                               (.createAppender DuckDBConnection/DEFAULT_SCHEMA
-                                                table-name))]
-        (doseq [row rows]
-          (.beginrow appender)
-          (doseq [col row]
-            (.append col))
-          (.endrow appender))))))
+    (let [conn (get-in sql-ctx [:ctx :appender-conn])
+          [schema table] (if (.contains table-name ".")
+                           (st/split table-name #"\.")
+                           [DuckDBConnection/DEFAULT_SCHEMA table-name])]
+      (log/infof "[bulk-load] schema: %s, table: %s" schema table)
+      (try (with-open [appender (.createAppender conn schema table)]
+             (doseq [row rows]
+               (.beginRow appender)
+               (doseq [col row]
+                 (.append appender col))
+               (.endRow appender))
+             {:loaded? true})
+
+           (catch Exception ex
+             {:loaded? false :msg (.getMessage ex)})))))
 
 
 
