@@ -84,7 +84,7 @@ The KV-Store is capable of hosting multiple embedded database instances in the p
 	)
 ```
 1. Require the ```clj.intracel.kv-store.interface``` namespace. IntraCel is built in the popular polylith style monorepo so you'll see naming conventions that come from that architecture here (e.g. - API's within an interface namespace). The public interface to interact with the ```KVStoreContext``` resides here.
-   API definitions and common data types can be found in the namespace: ```clj.intracel.api.interface.protocols```. The definition for the ```KVStoreContext``` can be found in: ```clj.intracel.api.interface/KVStoreContext```. It's basically a ```defrecord``` that implements Java's ```Closeable``` interface and contains the instance of hosting environment to spawn multiple database instances. 
+   API definitions and common data types can be found in the namespace: ```clj.intracel.api.interface.protocols```. The definition for the ```KVStoreContext``` can be found in: ```clj.intracel.api.interface.protocols/KVStoreContext```. It's basically a ```defrecord``` that implements Java's ```Closeable``` interface and contains the instance of hosting environment to spawn multiple database instances. 
 
 2. Since ```KVStoreContext``` implements ```Closeable```, it can be used inside a ```(with-open [])``` block to allow it to be closed automatically when it goes out of scope. 
 
@@ -130,9 +130,9 @@ Developers may want to keep the ```KVStoreContext``` in a long-lived application
 
 1. Like in previous examples, we'll alias the ```kv-store```. 
 2. We're going to bring in a new namespace now. The ```kv-store``` only works with raw ```java.nio.ByteBuffer```s for its keys and values. The ```clj.intracel.serde.interface``` namespace contains Serializers and Deserializers (called SerDes) to move data in and out of the kv-store using Clojure data structures.
-3. We'll create a reference to the ```KVStoreContext``` again and bind it to  ```kvs-db-ctx``` in our let block. 
+3. We'll create a reference to the ```KVStoreDBContext``` and bind it to  ```kvs-db-ctx``` in our let block. This is used to contruct database instances (dbi's).
 4. Next, we'll create a reference to a ```clj.intracel.api.interface.protocols/KVStoreDbContextApi```. This is a container that is used to generate database instances. In the context of IntraCel's kv-store, database instances could be considered like tables in a SQL database. They should have the same key type in order to perform the same operations on them.
-This ```KVStoreDbContextApi``` instance is purpose built to support database instances that run on LMDB and accepts the reference to the ```KVStoreContext``` which it will use to help it generate database instances properly. 
+This ```KVStoreDbContextApi``` instance is purpose built to support database instances that run on LMDB and accepts the reference to the ```KVStoreDBContext``` which it will use to help it generate database instances properly. 
 We'll bind the instance to the ```kvs-db-ctx``` variable.
 5. We'll create a database instance by calling the ```kv-store/db``` function, using the reference to our ```KVStoreDbContextApi```. The second parameter is the name to give the database instance (```sg-1```). The third parameter gives the caller the ability to customize some of the behind-the-scenes implementation of the database instance. 
 Under the hood, the database instance utilizes a core.async channel to ensure that a single thread is in charge of delivering writes. This is to ensure consistency as LMDB utilizes ACID transactions. The ```:ic-chan-opts/buf-size``` key lets the caller adjust the size of the buffered channel that receives data being written. Alternatively, the caller could provide its own channel implementation by using the ```:ic-chan-opts/replacement-chan``` key instead.
