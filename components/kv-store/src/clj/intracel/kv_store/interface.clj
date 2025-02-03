@@ -1,5 +1,5 @@
 (ns clj.intracel.kv-store.interface
-  "The `clj.intracel.kv-store.interface` namespace defines polylith interface for the KV-Store. 
+  "The `clj.intracel.kv-store.interface` namespace defines polylith a interface for the KV-Store. 
 Generally, this is the namespace users of the KV-Store will put in their [[require]] statement 
 to use the component."
   (:require [clj.intracel.api.interface.protocols :as proto]
@@ -23,7 +23,7 @@ to use the component."
   |             | | `:intracel.kv-store.lmdb/storage-path`           | Local filesystem path where the data will be persisted to disk.||
   
   Returns:
-  A [[clj.intracel.api.kv-store/KVStoreContext]] with the :ctx and :db-ctxs fields set."
+  A [[clj.intracel.api.interface.protocols/KVStoreContext]] with the :ctx and :db-ctxs fields set."
   [ctx-opts]
   (proto/map->KVStoreContext (new-kv-store-context ctx-opts)))
 
@@ -65,7 +65,7 @@ to use the component."
   (lmdb/create-kv-db-context kvs-ctx))
 
 (defn db
-  "Returns a hosted embedded database. See [[clj.intracel.api.kv-store/KVStoreDb]].
+  "Returns a hosted embedded database. See [[clj.intracel.api.interface.protocols/KVStoreDbiApi]].
   
   Depends on: [[create-kv-store-db-context]]"
   ([kvs-db-ctx db-name]
