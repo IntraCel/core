@@ -72,8 +72,8 @@ For those who use Calva and VS Code and want to run IntraCel with LMDB, there is
 }
 ```
 
-## Create the KVStoreContext
-The KV-Store is capable of hosting multiple embedded database instances in the process. To do this, first create the context that will host them.
+## KV-Store: Create the SQLStoreContext
+The SQL-Store is an embedded SQL database instances in the process. To do this, first create the context that will host them.
 
 ```clojure 
 (require '[clj.intracel.kv-store.interface :as kv-store])
@@ -111,7 +111,7 @@ The KV-Store is capable of hosting multiple embedded database instances in the p
 ```
 Developers may want to keep the ```KVStoreContext``` in a long-lived application since it is strongly recommended only have one per JVM process. Instead of running it inside of a with block, it could easily be used in something like [a stateful component](https://github.com/stuartsierra/component) where the ```(.close)``` function could be called as the component's ```(stop [])``` function gets automatically invoked [see the Lifecycle protocol for more details](https://github.com/stuartsierra/component/blob/master/src/com/stuartsierra/component.cljc#L5).
 
-## Create A Database Instance
+## KV-Store: Create A Database Instance
 ```clojure
 (require '[clj.intracel.kv-store.interfce :as kv-store])
 (require '[clj.intracel.serde.interface :as kv-serdes])
@@ -138,8 +138,10 @@ We'll bind the instance to the ```kvs-db-ctx``` variable.
 Under the hood, the database instance utilizes a core.async channel to ensure that a single thread is in charge of delivering writes. This is to ensure consistency as LMDB utilizes ACID transactions. The ```:ic-chan-opts/buf-size``` key lets the caller adjust the size of the buffered channel that receives data being written. Alternatively, the caller could provide its own channel implementation by using the ```:ic-chan-opts/replacement-chan``` key instead.
 The final parameter is a vector containing start-up options for the database instance for LMDB. In this case, the ```:ic-db-flags/create-db-if-not-exists``` will start a new database file on the filesystem if this is the first time the database with the name provided is being used. 
 
-## Write to a Database Instance - Sync
+## KV-Store: Write to a Database Instance - Sync
 ```clojure
+(require '[clj.intracel.kv-store.interfce :as kv-store])
+
 (with-open [kvs-ctx (kv-store/create-kv-store-context {:intracel.kv-store/type :lmdb
                                                          :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb/")})]
     (try (let [kvs-db-ctx (kv-store/create-kv-store-db-context kvs-ctx :lmdb)]
@@ -177,9 +179,12 @@ For the curious, each of these synchronous calls put the key/value pairs provide
 ```
 4. Once data is written to the database instance, it can be retrieved using the ```kv-store/kv-get``` function. This function also takes the database instance as the first parameter. Its second is the key the caller is looking for in the database (```general```). Like its sibling, the ```kv-get``` function is also multi-arity and allows the caller to customize the SerDes it uses on both the key and the value. When not provided, it also defaults to a ```clj.intracel.serde.string-serde```.
 
-## Write to a Database Instance - Async
+## KV-Store: Write to a Database Instance - Async
 The async functions on database instances can be really useful in data-intensive applications. They allow the caller to let Clojure schedule writes in a thread pool without waiting for each one to complete. 
 ```clojure
+(require '[clj.intracel.kv-store.interfce :as kv-store])
+(require '[clj.intracel.serde.interface :as kv-serdes])
+
 (with-open [kvs-ctx (kv-store/create-kv-store-context {:intracel.kv-store/type :lmdb
                                                          :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb/")})]
     (try (let [kvs-db-ctx (kv-store/create-kv-store-db-context kvs-ctx :lmdb)
@@ -226,6 +231,24 @@ For the curious, each of these asynchronous calls put the key/value pairs provid
 ```
 4. Since the async put functions have returned channels, we'll reduce on them and block on each one-shot response channel to make sure everything has been written first.
 5. Once data is written to the database instance, it can be retrieved using the ```kv-store/kv-get``` function.  This function also takes the database instance as the first parameter. Its second is the key the caller is looking for in the database (```general```). Like its sibling, the ```kv-get``` function is also multi-arity and allows the caller to customize the SerDes it uses on both the key and the value. When not provided, it also defaults to a ```clj.intracel.serde.string-serde```.
+
+## SQL-Store: Create the SQLStoreContext
+The SQL-Store is an embedded SQL database which gives developers the ability to maintain multiple databases and tables. The ```clj.intracel.api.protocols.SQLStoreContext``` is the jumping off point to getting a database set up. 
+```clojure
+(require '[clj.intracel.sql-store.interface :as sql-store])
+
+(with-open [sql-ctx (sql-store/create-sql-store-context 
+                      {:intracel.sql-store/type :duckdb 
+                       :intracel.sql-store.duckdb/storage-path (str (System/getProperty "java.io.tmpdir") "/duckdb")})]
+      ;;Start using your context here
+      )
+```
+1. Require in the `clj.intracel.sql-store.interface` namespace. We'll use `sql-store` to alias it.
+2. Since ```SQLStoreContext``` implements ```Closeable```, it can be used inside a ```(with-open [])``` block to allow it to be closed automatically when it goes out of scope.
+3. Create the ```SQLStoreContext``` by calling ```(sql-store/create-sql-store-context)```. This function expects the ctx-opts argument to be a map with specific keys.
+4. The first key in the example is`:intracel.sql-store/type`. This tells intracel what type of embedded database to start up. Currently, the library supports a single database type of `:duckdb`. With its current set of interfaces, other embedded databases can easily be added.
+5. The second key in the xample is the `intracel.sql-store.duckdb/storage-path`. This key is namespaced as a DuckDB specific setting for where the embedded database will persist changes.  
+
 <!--## Good Design Is About Planning Ahead for Unavoidable Growth
 
 # IntraCel Arms You With Years of Architectural Experience
