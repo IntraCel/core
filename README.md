@@ -249,6 +249,35 @@ The SQL-Store is an embedded SQL database which gives developers the ability to 
 4. The first key in the example is`:intracel.sql-store/type`. This tells intracel what type of embedded database to start up. Currently, the library supports a single database type of `:duckdb`. With its current set of interfaces, other embedded databases can easily be added.
 5. The second key in the xample is the `intracel.sql-store.duckdb/storage-path`. This key is namespaced as a DuckDB specific setting for where the embedded database will persist changes.  
 
+## SQL-Store: Create a Connection to the Database
+Once a ```SQLStoreContext``` has been created, we'll use a database specific instance of the ```clj.intracel.api.interface.protocols.SQLStoreDbContextApi```. That's a moutful, but it's bascially an interface into a factory that can create connections to your database. The following example shows how to get a connection to DuckDB.
+```clojure
+(require '[clj.intracel.sql-store.interface :as sql-store])
+(require '[next.jdbc :as jdbc])
+
+(with-open [sql-ctx (sql-store/create-sql-store-context {:intracel.sql-store/type :duckdb
+                                                           :intracel.sql-store.duckdb/storage-path (str (System/getProperty "java.io.tmpdir") "/duckdb")})]
+    (is (not (nil? sql-ctx)))
+    (try (let [sql-store-db-ctx (sql-store/create-sql-store-db-context sql-ctx :duckdb)]
+           (let [db            (sql-store/db sql-store-db-ctx)
+                 pool-ds       (get-in db [:sql-ctx :ctx :pool])
+                 appender-conn (get-in db [:sql-ctx :ctx :appender-conn])]
+             ;;Use pool-ds and appender-conn here
+             ))
+         (catch Exception e
+           (prn "Error in Test: " (.getMessage e))
+           (doseq [tr (.getStackTrace e)]
+             (prn "Trace: " tr)))))
+```
+1. As in the previous example, we'll require the SQL Store interface and alias it with ```sql-store```.
+2. We'll also bring in the excellent next.jdbc library by Sean Corfield. For instructions on how to set that up in your project see [documentation here](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/1.3.994/doc/getting-started).
+3. As in the previous example, we'll create a reference to our ```SQLStoreContext```.
+4. Next, we'll bind an DuckDB specific instance of the ```SQLStoreDbContextApi``` to the the var ```sql-store-db-context```. This is our factory for producing container objects with connections to the database.
+5. We'll pass the factory in the ```(sql-store/db)``` function to produce a binding to the ```db``` var. This contains our connection(s) to DuckDB. 
+6. In the DuckDB implementation, there are actually two different connection objects to work with in the object.
+7. The first is a next.jdbc pooled connection that is generally intended for performing most operations on the database, particularly queries. This will dole out preset JDBC compatible connections that can be used in threads to query tables. In the example, this is bound to the ```pool-ds``` (Pooled DataSource) by extracting the ```:pool``` key from the ```db``` var.
+8. The second is a DuckDB specific connection of type ```org.duckdb.DuckDBConnection```. This is meant to allow the caller to utilize APIs specifically meant for efficient bulk loading into the database. In the example,  this is bound to the ```appender-conn``` var by extracting the ```:appender-conn``` key from the ```db``` var.
+
 <!--## Good Design Is About Planning Ahead for Unavoidable Growth
 
 # IntraCel Arms You With Years of Architectural Experience
