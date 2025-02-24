@@ -1,4 +1,4 @@
-(ns clj.intracel.caching
+(ns clj.intracel.examples.caching
   (:require [clj.intracel.kv-store.interface :as kv-store]))
 
 (defn expensive-operation [key] 
