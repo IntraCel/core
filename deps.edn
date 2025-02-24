@@ -4,6 +4,7 @@
                                com.stuartsierra/component {:mvn/version "1.1.0"}
                                com.taoensso/timbre        {:mvn/version "6.1.0"}
                                
+                               poly-intracel/examples     {:local/root "bases/examples"}
                                poly-intracel/api          {:local/root "components/api"}
                                poly-intracel/kv-store     {:local/root "components/kv-store"}
                                poly-intracel/serde        {:local/root "components/serde"}
