@@ -15,7 +15,7 @@
 
 (defn cache-example []
   (with-open [kvs-ctx (kv-store/create-kv-store-context {:intracel.kv-store/type :lmdb
-                                                         :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb-cache/")})]
+                                                         :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb-cache-" (java.util.UUID/randomUUID) "/")})]
     (let [kvs-db-ctx (kv-store/create-kv-store-db-context kvs-ctx :lmdb)
           dbi        (kv-store/db kvs-db-ctx "sci-fi" nil [:ic-db-flags/create-db-if-not-exists])]
       (kv-store/kv-put dbi "stargate" "SG-1")
