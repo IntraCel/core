@@ -38,8 +38,8 @@ For those who use Calva and VS Code and want to run IntraCel with LMDB, there is
 }
 ```
 
-## KV-Store: Create the SQLStoreContext
-The SQL-Store is an embedded SQL database instances in the process. To do this, first create the context that will host them.
+## KV-Store: Create the KVStoreContext
+The KV-Store is an embedded Key/Value database that runs in the application's process. The KV-Store can host multiple database instances at a time. To use it, first create the context that will host them.
 
 ```clojure 
 (require '[clj.intracel.kv-store.interface :as kv-store])
@@ -228,8 +228,34 @@ Once a ```SQLStoreContext``` has been created, we'll use a database specific ins
            (let [db            (sql-store/db sql-store-db-ctx)
                  pool-ds       (get-in db [:sql-ctx :ctx :pool])
                  appender-conn (get-in db [:sql-ctx :ctx :appender-conn])]
-             ;;Use pool-ds and appender-conn here
-             ))
+                 (prn "db:" db)
+                 (prn "schemas:")
+                 (try 
+                 (let [schemas (jdbc/execute! pool-ds ["SELECT schema_name FROM information_schema.schemata"])] 
+                 (prn schemas))
+                 (catch Exception ex 
+                 (prn "failed to list schemas:" (.getMessage ex))))
+
+                 (jdbc/execute! appender-conn
+                     ["CREATE SCHEMA IF NOT EXISTS intracel"])
+
+                 (jdbc/execute! appender-conn ["USE intracel"])
+      
+                 (prn "Tables in schema intracel:")
+                 (let [tables (jdbc/execute! pool-ds ["SELECT table_name FROM information_schema.tables where table_schema = 'intracel'"])]
+                 (prn tables))
+
+                 (jdbc/execute! appender-conn 
+                 ["CREATE OR REPLACE TABLE movies (title VARCHAR, year INT, rotten_tomatoes_score FLOAT)"]) 
+                 (let [results (sql-store/bulk-load db "intracel.movies" 
+                                [["Star Wars Episode V: The Empire Strikes Back" 1977 93.0]
+                                  ["Ghostbusters" 1984 95.0]
+                                  ["Inception" 2010 87.0]])]
+                                  (prn "results:" results))
+                                  (when (:loaded? results)
+          (let [ghostbusters (jdbc/execute! appender-conn ["SELECT * FROM intracel.movies_villains WHERE title = 'Ghostbusters'"])]
+            (prn "Favorite Ghost Action Movie: " ghostbuster)))
+                  )
          (catch Exception e
            (prn "Error in Test: " (.getMessage e))
            (doseq [tr (.getStackTrace e)]
