@@ -1,5 +1,6 @@
 (ns clj.intracel.api.interface.protocols
-  (:import [java.io Closeable]))
+  (:import [java.io Closeable])
+  (:gen-class))
 
 (defprotocol KVSerde
   (serialize [kv-serde data]

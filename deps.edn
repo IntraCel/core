@@ -3,7 +3,7 @@
                   :extra-deps {org.clojure/clojure        {:mvn/version "1.12.0"}
                                com.stuartsierra/component {:mvn/version "1.1.0"}
                                com.taoensso/timbre        {:mvn/version "6.1.0"}
-                               
+
                                poly-intracel/examples     {:local/root "bases/examples"}
                                poly-intracel/api          {:local/root "components/api"}
                                poly-intracel/kv-store     {:local/root "components/kv-store"}
@@ -18,4 +18,8 @@
 
             :poly {:main-opts ["-m" "polylith.clj.core.poly-cli.core"]
                    :extra-deps {io.github.seancorefield/build-clj {:git/tag "v0.8.0" :git/sha "9bd8b8a"}
-                                polylith/clj-poly                 {:mvn/version "0.2.21"}}}}}
+                                polylith/clj-poly                 {:mvn/version "0.2.21"}}}
+
+            :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}}
+                    ;;Sets the build namespace as the default (see ns in build.clj)
+                    :ns-default build}}}
