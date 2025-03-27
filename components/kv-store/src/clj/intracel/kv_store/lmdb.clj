@@ -6,8 +6,7 @@
              :refer [>! <! >!! <!! go chan buffer close! thread
                      alts! alts!! timeout]]
             [clojure.java.io :as io]
-            [clojure.string :as st]
-            [com.stuartsierra.component :as component]
+            [clojure.string :as st] 
             [taoensso.timbre :as log])
   (:import [clj.intracel.api.interface.protocols KVStoreDbContextApi]
            [java.io File]
@@ -206,7 +205,7 @@
                      pre-put-hook-fn
                      nil)]
     (if (some? pre-put-fn)
-      (let [[transformed-key transformed-value]   (pre-put-fn key value)]
+      (let [[transformed-key transformed-value] (pre-put-fn key value)]
         (if (or (nil? transformed-key)
                 (nil? transformed-value))
           (throw (ex-info "[pre-put-hook-fn] The pre-put-hook-fn provided returned an unusable key or value for performing a kv-put operation on the KV-Store."

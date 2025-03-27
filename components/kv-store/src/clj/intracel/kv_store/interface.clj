@@ -73,9 +73,9 @@ to use the component."
   ([kvs-db-ctx db-name chan-opts]
    (db kvs-db-ctx db-name chan-opts nil))
   ([kvs-db-ctx db-name chan-opts db-opts]
-   (db kvs-db-ctx db-name chan-opts db-opts nil))
-  ([kvs-db-ctx db-name chan-opts db-opts pre-get-hook-fn]
-   (proto/db kvs-db-ctx db-name chan-opts db-opts pre-get-hook-fn)))
+   (db kvs-db-ctx db-name chan-opts db-opts nil nil))
+  ([kvs-db-ctx db-name chan-opts db-opts pre-get-hook-fn pre-put-hook-fn]
+   (proto/db kvs-db-ctx db-name chan-opts db-opts pre-get-hook-fn pre-put-hook-fn)))
 
 (defn set-key-serde
   "Sets the default key SerDe used for serializing and deserializing to and from the database. See [[clj.intracel.api.kv-store/KVStoreDb]].
@@ -111,7 +111,12 @@ Depends on: [[db]]."
   ([^KVStoreDbiApi kvs-db key value ^KVSerde key-serde ^KVSerde val-serde]
    (proto/kv-put-async kvs-db key value key-serde val-serde)))
 
-
+(defn set-pre-put-hook 
+  "This enables the caller to customize the behavior performed when writing a key/value paire in [[kv-put]] or [[kv-put-async]] by allowing caller code to pre-process the key and value. See [[clj.intracel.api.kv-store/KVStoreDb]].
+  
+  Depends on: [[db]]"
+  [^KVStoreDbiApi kvs-db pre-fn]
+  (proto/set-pre-put-hook kvs-db pre-fn))
 (defn set-pre-get-hook
   "This enables the caller to customize the behavior performed when doing a key look-up in [[kv-get]] by allowing caller code to pre-process the key. See [[clj.intracel.api.kv-store/KVStoreDb]].
 
