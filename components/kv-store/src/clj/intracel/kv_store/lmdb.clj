@@ -39,11 +39,11 @@
 (def one-gigabyte 1073741824)
 (def default-mem-size one-gigabyte)
 
-(declare translate-dbi-flags configure-channel pre-process-key-for-get)
+(declare translate-dbi-flags configure-channel pre-process-key-for-get pre-process-key-and-value-for-put)
 
 
 
-(defrecord LmdbRec [cmd-chan dbi key-serde kvs-ctx max-key-size pre-get-hook-fn val-serde]
+(defrecord LmdbRec [cmd-chan dbi key-serde kvs-ctx max-key-size pre-get-hook-fn pre-put-hook-fn val-serde]
   proto/KVStoreDbiApi
   (start [kvs-db]
     (log/info "[kv-store](LmdbRec) Starting KV-Store Service.")
@@ -54,6 +54,7 @@
             (when (= (mod c 100) 0)
               (log/debug "[kv-store](LmdbRec) Listening in go loop."))
             (let [{:keys [ack-chan cmd key value k-serde v-serde]} (<! @cmd-chan)
+                  [key value] (pre-process-key-and-value-for-put key value @pre-put-hook-fn)
                   ks      (or k-serde @key-serde)
                   vs      (or v-serde @val-serde)
                   _       (log/debugf "[kv-store](LmdbRec) Serializing key: %s, val: %s" key value)
@@ -90,6 +91,10 @@
 
   (set-val-serde [kvs-db val-serde]
     (reset! (:val-serde kvs-db) val-serde)
+    kvs-db)
+
+  (set-pre-put-hook [kvs-db pre-fn]
+    (reset! (:pre-put-hook-fn kvs-db) pre-fn)
     kvs-db)
 
   (kv-put [kvs-db key value]
@@ -144,9 +149,9 @@
       (log/debugf "[kv-put-async](LmdbRec) Returning async channel for consumer to listen for acknowledgement.")
       one-shot-ack-chan))
 
-  (set-pre-get-hook [this pre-fn]
-    (reset! (:pre-get-hook-fn this) pre-fn)
-    this)
+  (set-pre-get-hook [kvs-db pre-fn]
+    (reset! (:pre-get-hook-fn kvs-db) pre-fn)
+    kvs-db)
 
   (kv-get [kvs-db key]
     (log/debugf "[kv-get](LmdbRec) Retrieving key %s from KV-Store." key)
@@ -194,6 +199,22 @@
           transformed-key))
       key)))
 
+(defn- pre-process-key-and-value-for-put [key value pre-put-hook-fn]
+  (log/debugf "[pre-process-key-and-value-for-put] key: %s, value: %s" key value)
+  (log/debugf "[pre-process-key-and-value-for-put] pre-put-hook-fn type: %s" (type pre-put-hook-fn))
+  (let [pre-put-fn (if (some? pre-put-hook-fn)
+                     pre-put-hook-fn
+                     nil)]
+    (if (some? pre-put-fn)
+      (let [[transformed-key transformed-value]   (pre-put-fn key value)]
+        (if (or (nil? transformed-key)
+                (nil? transformed-value))
+          (throw (ex-info "[pre-put-hook-fn] The pre-put-hook-fn provided returned an unusable key or value for performing a kv-put operation on the KV-Store."
+                          {:cause #{:invalid-response-from-pre-put-hook-fn}}))
+          [transformed-key transformed-value]))
+      [key value])))
+
+
 (defn create-kv-store-context [{:keys [intracel.kv-store.lmdb/storage-path
                                        intracel.kv-store.lmdb/keyspace-max-mem-size
                                        intracel.kv-store.lmdb/num-dbs]}]
@@ -225,15 +246,15 @@
 (defrecord LmdbContext [kvs-ctx db-instances]
   KVStoreDbContextApi
   (db [this db-name]
-    (proto/db this db-name nil nil nil))
+    (proto/db this db-name nil nil nil nil))
 
   (db [this db-name chan-opts]
-    (proto/db this db-name chan-opts nil nil))
+    (proto/db this db-name chan-opts nil nil nil))
 
   (db [this db-name chan-opts db-opts]
-    (proto/db this db-name chan-opts db-opts nil))
+    (proto/db this db-name chan-opts db-opts nil nil))
 
-  (db [this db-name chan-opts db-opts pre-get-hook-fn]
+  (db [this db-name chan-opts db-opts pre-get-hook-fn pre-put-hook-fn]
     (let [max-key-size (.getMaxKeySize (:ctx kvs-ctx))
           dbi (if (contains? @(:db-instances this) db-name)
                 (get @(:db-instances this) db-name)
@@ -246,6 +267,7 @@
                                                :kvs-ctx         kvs-ctx
                                                :max-key-size    max-key-size
                                                :pre-get-hook-fn (atom pre-get-hook-fn)
+                                               :pre-put-hook-fn (atom pre-put-hook-fn)
                                                :val-serde       (atom (serde/string-serde))})
                       _         (log/debug "[db] Starting Database Instance")
                       started   (proto/start instance)]

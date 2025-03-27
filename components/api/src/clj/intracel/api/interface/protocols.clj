@@ -30,7 +30,7 @@
     [kvs-db db-name]
     [kvs-db db-name chan-opts]
     [kvs-db db-name chan-opts db-opts]
-    [kvs-db db-name chan-opts db-opts pre-get-hook-fn]
+    [kvs-db db-name chan-opts db-opts pre-get-hook-fn pre-put-hook-fn]
     "Returns a hosted embedded database that implements the [[clj.intracel.api.interface.protocols/KVStoreDbiApi]]. 
      All multi-arity versions of the kvs-db reference and the db-name.
      The 3-arity version allows the caller to customize the settings of the underlying channel used for writing to the database. 
@@ -84,6 +84,7 @@
     |                   |                                               environment. 
     |                   |                                               Correlates to [org.lmdbjava.DbiFlagsMDB_CREATE(0x4_0000)(https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_CREATE)|
     | `pre-get-hook-fn` | A function that accepts a single `key` arg and returns a new `key` that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-get]] function. |
+    | `pre-put-hook-fn` | A function that accepts a `key` arg, and a `value` arg and returns a new `key` and `value` in a two-element vector that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-get]] function. |
     Returns:
     An `clj.intracel.api.kv-store/KVStoreDb` that can be used in a builder pattern to compose a KV-Store database instance with the desired settings."))
 
@@ -130,6 +131,20 @@
     | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]] If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. ||
     Returns:
     A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern with the default `clj.intracel.api.kv-store/KVSerde` for keys configured.")
+  
+  (set-pre-put-hook [kvs-db pre-fn] 
+    "This enables the caller to customize the behavior performed when writing a key/value pair in [[kv-put]] and [[kv-put-async]] by allowing caller code to pre-process the key and value.
+      This could be useful for performing transformations on the key and value or sending a copy of the data to something else.
+      
+      Depends on: [[db]] 
+      | Parameter   | Description |
+      | ------------|-------------|
+      | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
+      | `pre-fn`    | A function that accepts a `key` arg, and a `value` arg and returns a new `key` and a new `value` in a two element vector that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-put]] and [[kv-put-async]] functions. ||
+  
+      Returns:
+      A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern.")
+  
   (kv-put
     [kvs-db key value]
     [kvs-db key value key-serde val-serde]
