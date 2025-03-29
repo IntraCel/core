@@ -21,6 +21,7 @@
                                 polylith/clj-poly                 {:mvn/version "0.2.21"}}}
 
             :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}
+                           org.clojure/tools.deps        {:mvn/version "0.16.1281"}
                            slipset/deps-deploy           {:mvn/version "0.2.2"}}
                     ;;Sets the build namespace as the default (see ns in build.clj)
                     :ns-default build}}}
