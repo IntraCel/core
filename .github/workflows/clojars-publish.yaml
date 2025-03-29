@@ -29,8 +29,8 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
       - name: Switch to Project Directory
         run: cd projects/intracel-core
-      - name: Install Dependencies
-        run: clojure -T:deps
+      #- name: Install Dependencies
+      #  run: clojure -T:deps
       - name: Build Uberjar
         run: clojure -T:build uberjar
       - name: Publish to Clojars
