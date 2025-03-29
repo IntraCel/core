@@ -20,6 +20,7 @@
                    :extra-deps {io.github.seancorefield/build-clj {:git/tag "v0.8.0" :git/sha "9bd8b8a"}
                                 polylith/clj-poly                 {:mvn/version "0.2.21"}}}
 
-            :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}}
+            :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}
+                           slipset/deps-deploy           {:mvn/version "0.2.2"}}
                     ;;Sets the build namespace as the default (see ns in build.clj)
                     :ns-default build}}}
