@@ -40,3 +40,4 @@ projects/**/pom.xml
 
 # Drawio Backup files
 **/*.bkp
+manual-deploy-clojars.sh

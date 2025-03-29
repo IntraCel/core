@@ -16,7 +16,7 @@
             [clojure.tools.deps.util.dir :refer [with-dir]]
             [deps-deploy.deps-deploy :as dd]))
 
-(def lib 'com.github.intracel/intracel-core)
+(def lib 'org.clojars.intracel-admin/intracel-core)
 (defn- the-version [patch] (format "0.1.%s" patch))
 (def version (the-version (b/git-count-revs nil)))
 (def snapshot (the-version "9999-SNAPSHOT"))
@@ -58,9 +58,10 @@
 
 (defn- jar-opts [opts]
   (let [version (if (:snapshot opts) snapshot version)]
-    (println "\nVersion:" version)
+    (println "Version:" version)
     (assoc opts
-           :lib lib   :version version
+           :lib       lib
+           :version   version
            :jar-file  (format "target/%s-%s.jar" lib version)
            :basis     (b/create-basis {})
            :class-dir class-dir
@@ -85,7 +86,7 @@
   [{:keys [project uber-file] :as opts}]
   (let [project-root (ensure-project-root "uberjar" project)
         aliases      (with-dir (io/file project-root) (get-project-aliases))
-        main         (-> aliases :uberjar :main)] 
+        main         (-> aliases :uberjar :main)]
     (binding [b/*project-root* project-root]
       (let [class-dir "target/classes"
             uber-file (or uber-file
@@ -96,22 +97,68 @@
                                          {:main main}
                                          nil)))]
         (b/delete {:path "target"})
-        (prn "\nWriting pom.xml...")
+        (prn "Writing pom.xml...")
         (b/write-pom opts)
-        (prn "\nCopying source...")
+        (prn "Copying source...")
         (b/copy-dir {:src-dirs ["src" "resources" "components" "bases"]
                      :target-dir class-dir})
-        (prn "\nCompiling...")
+        (prn "Compiling...")
         (b/compile-clj {:basis (:basis opts)
                         :src-dirs ["src" "resources" "components" "bases"]
                         :class-dir class-dir})
-        (prn "\nBuilding uberjar...")
+        (prn "Building uberjar...")
         (b/uber (merge opts
                        (if (some? uber-file)
                          {:uber-file uber-file}
                          nil)
-                       {:basis (:basis opts)})) 
+                       {:basis (:basis opts)}))
         (println "Uberjar is built.")
+        opts))))
+
+(defn libjar
+  "Builds an uberjar for the specified project.
+  Options:
+  * :project - required, the name of the project to build,
+  * :uber-file - optional, the path of the JAR file to build,
+    relative to the project folder; can also be specified in
+    the :uberjar alias in the project's deps.edn file; will
+    default to target/PROJECT.jar if not specified.
+  Returns:
+  * the input opts with :class-dir, :compile-opts, :main, and :uber-file
+    computed.
+  The project's deps.edn file must contain an :uberjar alias
+  which must contain at least :main, specifying the main ns
+  (to compile and to invoke)."
+  [{:keys [project uber-file] :as opts}]
+  (let [project-root (ensure-project-root "uberjar" project)
+        aliases      (with-dir (io/file project-root) (get-project-aliases))
+        main         (-> aliases :uberjar :main)]
+    (binding [b/*project-root* project-root]
+      (let [class-dir "target/classes"
+            uber-file (or uber-file
+                          (-> aliases :uberjar :uber-file)
+                          (str "target/" project ".jar"))
+            opts      (jar-opts (merge opts
+                                       (if (some? main)
+                                         {:main main}
+                                         nil)))]
+        (b/delete {:path "target"})
+        (prn "Writing pom.xml...")
+        (b/write-pom opts)
+        (prn "Copying source...")
+        (b/copy-dir {:src-dirs ["src" "resources" "components" "bases"]
+                     :target-dir class-dir})
+        (prn "Compiling...")
+        (b/compile-clj {:basis (:basis opts)
+                        :src-dirs ["src" "resources" "components" "bases"]
+                        :class-dir class-dir})
+        (prn "Building library jar...")
+        (b/jar (merge opts
+                      (if (some? uber-file)
+                        {:uber-file uber-file}
+                        nil)
+                      {:basis (:basis opts)}))
+        (println "Library jar is built.")
         opts))))
 
 (defn- run-task [aliases]
@@ -165,20 +212,31 @@
         opts    (jar-opts opts)]
     (b/delete {:path "target"})
     #_(doseq [alias aliases]
-      (run-doc-tests {:aliases [alias]})) 
+        (run-doc-tests {:aliases [alias]}))
     (doseq [alias aliases]
       (run-task [:test :runner alias]))
     (b/delete {:path "target"})
-    (println "\nWriting pom.xml...")
+    (println "Writing pom.xml...")
     (b/write-pom opts)
-    (println "\nCopying source...")
+    (println "Copying source...")
     (b/copy-dir {:src-dirs ["src"] :target-dir class-dir})
-    (println "\nBuilding" (:jar-file opts) "...")
+    (println "Building" (:jar-file opts) "...")
     (b/jar opts))
   opts)
 
 (defn deploy "Deploy the JAR to Clojars." [opts]
-  (let [{:keys [jar-file] :as opts} (jar-opts opts)]
-    (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
-                :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))}))
+  (let [{:keys [jar-file project] :as opts} (jar-opts opts)
+        project-root (ensure-project-root "deploy" project)]
+    (binding [b/*project-root* project-root]
+      (let [dir             (io/file (str project-root "/target/org.clojars.intracel-admin/"))
+            _               (when-not (.exists dir)
+                              (prn "Creating lib-dir: " (.getAbsolutePath dir))
+                              (.mkdirs dir))
+            unversioned-jar (io/file (str project-root "/target/" project ".jar"))
+            _               (prn (format "unversioned-jar: %s" (.getAbsolutePath unversioned-jar)))
+            versioned-jar   (io/file (str project-root "/target/" lib "-" version ".jar"))
+            _               (prn (format "versioned-jar: %s" (.getAbsolutePath versioned-jar)))]
+        (io/copy unversioned-jar versioned-jar))
+      (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
+                  :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))})))
   opts)
