@@ -63,10 +63,10 @@
            :lib       lib
            :version   version
            :jar-file  (format "target/%s-%s.jar" lib version)
-           :basis     (b/create-basis {})
+           :basis     (b/create-basis {:project "../deps.edn"})
            :class-dir class-dir
            :target    "target"
-           :src-dirs  ["src" "resources" "components" "bases"]
+           :src-dirs  ["src" "resources" "../components" "../bases"]
            :pom-data  (pom-template version))))
 
 (defn uberjar
@@ -146,11 +146,11 @@
         (prn "Writing pom.xml...")
         (b/write-pom opts)
         (prn "Copying source...")
-        (b/copy-dir {:src-dirs ["src" "resources" "components" "bases"]
+        (b/copy-dir {:src-dirs ["src" "resources" "../../components" "../bases"]
                      :target-dir class-dir})
         (prn "Compiling...")
         (b/compile-clj {:basis (:basis opts)
-                        :src-dirs ["src" "resources" "components" "bases"]
+                        :src-dirs ["src" "resources" "../components" "../bases"]
                         :class-dir class-dir})
         (prn "Building library jar...")
         (b/jar (merge opts
@@ -228,7 +228,7 @@
   (let [{:keys [jar-file project] :as opts} (jar-opts opts)
         project-root (ensure-project-root "deploy" project)]
     (binding [b/*project-root* project-root]
-      (let [dir             (io/file (str project-root "/target/org.clojars.intracel-admin/"))
+      #_(let [dir             (io/file (str project-root "/target/org.clojars.intracel-admin/"))
             _               (when-not (.exists dir)
                               (prn "Creating lib-dir: " (.getAbsolutePath dir))
                               (.mkdirs dir))
