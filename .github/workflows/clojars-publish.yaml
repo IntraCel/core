@@ -30,9 +30,9 @@ jobs:
       - name: Install Polylith
         run: | 
           wget https://github.com/polyfy/polylith/releases/download/v0.2.21/poly-0.2.21.jar
-          mkdir -p /usr/local/polylith
-          mv poly-0.2.21.jar /usr/local/polylith/ 
-          cp scripts/poly /usr/local/bin/poly        
+          sudo mkdir -p /usr/local/polylith
+          sudo mv poly-0.2.21.jar /usr/local/polylith/ 
+          sudo cp scripts/poly /usr/local/bin/poly        
       - name: Switch to Project Directory
         run: cd projects/intracel-core
       #- name: Install Dependencies
