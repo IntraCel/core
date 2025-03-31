@@ -13,6 +13,7 @@
     (is (not (nil? kvs-ctx)))))
 
 (deftest test-context-can-create-db-instance
+  (prn "JVM_OPTS:" (System/getenv "JVM_OPTS"))
   (with-open [kvs-ctx (kv-store/create-kv-store-context {:intracel.kv-store/type :lmdb
                                                          :intracel.kv-store.lmdb/storage-path (str (System/getProperty "java.io.tmpdir") "/lmdb/")})]
     (is (not (nil? kvs-ctx)))
@@ -50,6 +51,7 @@
     (is (not (nil? kvs-ctx)))
     (try (let [kvs-db-ctx (kv-store/create-kv-store-db-context kvs-ctx :lmdb)]
            (is (not (nil? kvs-db-ctx)))
+           (prn "JVM_OPTS:" (System/getenv "JVM_OPTS"))
            (let [dbi (kv-store/db kvs-db-ctx "sg-1" {:ic-chan-opts/buf-size 100} [:ic-db-flags/create-db-if-not-exists])]
              (is (not (nil? dbi)))
              (let [async-chans [(kv-store/kv-put-async dbi "general" "Jack O'Neil")

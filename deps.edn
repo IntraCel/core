@@ -17,7 +17,7 @@
                    :extra-deps  {org.clojure/test.check {:mvn/version "1.1.1"}}}
 
             :poly {:main-opts ["-m" "polylith.clj.core.poly-cli.core"]
-                   :extra-deps {io.github.seancorefield/build-clj {:git/tag "v0.8.0" :git/sha "9bd8b8a"}
+                   :extra-deps {;;io.github.seancorefield/build-clj {:git/tag "v0.8.0" :git/sha "9bd8b8a"}
                                 polylith/clj-poly                 {:mvn/version "0.2.21"}}}
 
             :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}
