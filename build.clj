@@ -18,7 +18,7 @@
 
 (def lib 'org.clojars.intracel-admin/intracel-core)
 (defn- the-version [patch] (format "0.1.%s" patch))
-(def version (the-version (b/git-count-revs nil)))
+(def version (or (System/getenv "VERSION") (format "0.1.%s" (b/git-count-revs nil))))
 (def snapshot (the-version "9999-SNAPSHOT"))
 (def class-dir "target/classes")
 
@@ -227,16 +227,7 @@
 (defn deploy "Deploy the JAR to Clojars." [opts]
   (let [{:keys [jar-file project] :as opts} (jar-opts opts)
         project-root (ensure-project-root "deploy" project)]
-    (binding [b/*project-root* project-root]
-      #_(let [dir             (io/file (str project-root "/target/org.clojars.intracel-admin/"))
-            _               (when-not (.exists dir)
-                              (prn "Creating lib-dir: " (.getAbsolutePath dir))
-                              (.mkdirs dir))
-            unversioned-jar (io/file (str project-root "/target/" project ".jar"))
-            _               (prn (format "unversioned-jar: %s" (.getAbsolutePath unversioned-jar)))
-            versioned-jar   (io/file (str project-root "/target/" lib "-" version ".jar"))
-            _               (prn (format "versioned-jar: %s" (.getAbsolutePath versioned-jar)))]
-        (io/copy unversioned-jar versioned-jar))
+    (binding [b/*project-root* project-root] 
       (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
                   :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))})))
   opts)
