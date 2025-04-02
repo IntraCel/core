@@ -6,6 +6,8 @@
 
 ## Setup
 
+[![Clojars Project](https://img.shields.io/clojars/v/org.clojars.intracel-admin/intracel-core.svg)](https://clojars.org/org.clojars.intracel-admin/intracel-core)
+
 Add the [relevant dependency](#latest-releases) to your project:
 
 ```clojure
