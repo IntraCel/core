@@ -61,7 +61,7 @@
     (println "Version:" version)
     (assoc opts
            :lib       lib
-           :version   (str "v" version)
+           :version   version
            :jar-file  (format "target/%s-%s.jar" lib version)
            :basis     (b/create-basis {:project "../deps.edn"})
            :class-dir class-dir
