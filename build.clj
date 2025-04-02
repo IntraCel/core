@@ -69,7 +69,7 @@
            :src-dirs  ["src" "resources" "../components" "../bases"]
            :scm       {:connection          "scm:git:https://github.com/IntraCel/core.git"
                        :developerConnection "scm:git:git@github.com:IntraCel/core.git"
-                       :tag                 (str "v" version)
+                       :tag                 version
                        :url                 "https://github.com/IntraCel/core"}
            :pom-data  (pom-template version))))
 
