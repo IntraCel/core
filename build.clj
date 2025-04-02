@@ -50,7 +50,7 @@
    [:developers
     [:developer
      [:name "Jared Holmberg"]]]
-   [:scm
+   #_[:scm
     [:url "https://github.com/IntraCel/core"]
     [:connection "scm:git:https://github.com/IntraCel/core.git"]
     [:developerConnection "scm:git:ssh:git@github.com:IntraCel/core.git"]
