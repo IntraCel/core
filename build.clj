@@ -61,12 +61,16 @@
     (println "Version:" version)
     (assoc opts
            :lib       lib
-           :version   version
+           :version   (str "v" version)
            :jar-file  (format "target/%s-%s.jar" lib version)
            :basis     (b/create-basis {:project "../deps.edn"})
            :class-dir class-dir
            :target    "target"
            :src-dirs  ["src" "resources" "../components" "../bases"]
+           :scm       {:connection          "scm:git:https://github.com/IntraCel/core.git"
+                       :developerConnection "scm:git:git@github.com:IntraCel/core.git"
+                       :tag                 (str "v" version)
+                       :url                 "https://github.com/IntraCel/core"}
            :pom-data  (pom-template version))))
 
 (defn uberjar
