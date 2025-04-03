@@ -107,14 +107,14 @@
         (b/copy-dir {:src-dirs ["src" "resources" "../../components" "../../bases"]
                      :target-dir class-dir})
         (prn "Compiling...")
-        (prn "Resolved src-dirs:" (map #(str (io/file %)) ["src" "resources" "../../components" "../../bases"]))
+        (prn "Resolved src-dirs:" (map #(str (io/file %)) ["src" "resources" "components" "bases"]))
         (doseq [dir ["src" "resources" "components" "bases"]]
           (let [resolved-dir (io/file dir)]
             (prn "Checking directory:" resolved-dir)
             (prn "Exists?" (.exists resolved-dir))
             (prn "Files:" (file-seq resolved-dir))))
         (b/compile-clj {:basis (:basis opts)
-                        :src-dirs ["src" "resources" "../../components" "../../bases"]
+                        :src-dirs ["components" "bases"]
                         :class-dir class-dir})
         (prn "Building uberjar...")
         (b/uber (merge opts
@@ -157,15 +157,17 @@
         (prn "Writing pom.xml...")
         (b/write-pom opts)
         (prn "Copying source...")
-        (b/copy-dir {:src-dirs ["../../components" "../../bases"]
+        #_(b/copy-dir {:src-dirs ["../../components" "../../bases"]
                      :target-dir class-dir})
         (prn "Compiling...")
-        (prn "Resolved src-dirs:" (map #(str (io/file %)) ["components" "bases"]))
+        (prn "Resolved src-dirs:" (map #(str (.getAbsolutePath (io/file %))) ["components" "bases"]))
         (doseq [dir ["components" "bases"]]
           (let [resolved-dir (io/file dir)]
-            (prn "Checking directory:" resolved-dir)
+            (prn "Checking directory:" (.getAbsolutePath resolved-dir))
             (prn "Exists?" (.exists resolved-dir))
-            (prn "Files:" (file-seq resolved-dir))))
+            (prn "Files:" (mapv #(.getAbsolutePath %) (file-seq resolved-dir)))))
+        
+        (prn "basis:" (:basis opts))
         (b/compile-clj {:basis (:basis opts)
                         :src-dirs ["components" "bases"]
                         :class-dir class-dir})
