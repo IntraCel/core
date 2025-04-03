@@ -10,11 +10,13 @@
   clojure -A:deps -T:build help/doc"
   (:refer-clojure :exclude [test])
   (:require [clojure.java.io :as io]
+            [clojure.set :as set]
             [clojure.string :as str]
             [clojure.tools.build.api :as b]
             [clojure.tools.deps :as t]
             [clojure.tools.deps.util.dir :refer [with-dir]]
-            [deps-deploy.deps-deploy :as dd]
+            [deps-deploy.deps-deploy :as dd] 
+            [polylith.clj.core.api.interface :as api]
             [polylith.clj.core.git.interface :as git]
             [polylith.clj.core.version.interface :as version]
             ))
@@ -66,6 +68,35 @@
   (let [branch (git/current-branch)]
     (git/latest-polylith-sha branch)))
 
+(defn- pom-template [version]
+  [[:description "IntraCel is your embedded data store keeper."]
+   [:url "https://github.com/IntraCel/core"]
+   [:licenses
+    [:license
+     [:name "Apache 2.0 Public License"]
+     [:url "https://www.apache.org/licenses/LICENSE-2.0"]]]
+   [:developers
+    [:developer
+     [:name "Jared Holmberg"]]]
+   #_[:scm
+      [:url "https://github.com/IntraCel/core"]
+      [:connection "scm:git:https://github.com/IntraCel/core.git"]
+      [:developerConnection "scm:git:ssh:git@github.com:IntraCel/core.git"]
+      [:tag (str "v" version)]]])
+
+(defn- latest-committed-sha
+  "Get the latest committed SHA from current branch."
+  []
+  (let [branch (git/current-branch)]
+    (git/latest-polylith-sha branch)))
+
+(defn- projects-to-deploy
+  "Returns the projects to deploy.
+   Read more in the api/projects-to-deploy doc on how this works under the hood."
+  []
+  (filterv #{"intracel-core"}
+           (api/projects-to-deploy "previous-release")))
+
 (defn jar
   "Builds a library jar for the specified project.
 
@@ -106,13 +137,14 @@
                          :class-dir class-dir
                          :jar-file jar-file
                          :lib lib
-                         :scm {:tag (if (= "SNAPSHOT" version/revision)
-                                      (latest-committed-sha)
-                                      (str "v" version/name))
+                         :scm {:tag version
                                :name "git"
-                               :url "https://github.com/polyfy/polylith"}
+                               :url "https://github.com/polyfy/polylith"
+                               :connection          "scm:git:https://github.com/IntraCel/core.git"
+                               :developerConnection "scm:git:git@github.com:IntraCel/core.git"}
                          :src-pom "partial_pom.xml"
-                         :version version/name})]
+                         :pom-data (pom-template version)
+                         :version version})]
         (b/delete {:path class-dir})
         (println "\nWriting pom.xml...")
         (b/write-pom opts)
@@ -132,21 +164,8 @@
             ;; account for project root relative paths:
             (update :jar-file (comp #(.getCanonicalPath %) b/resolve-path)))))))
 
-(defn- pom-template [version]
-  [[:description "IntraCel is your embedded data store keeper."]
-   [:url "https://github.com/IntraCel/core"]
-   [:licenses
-    [:license
-     [:name "Apache 2.0 Public License"]
-     [:url "https://www.apache.org/licenses/LICENSE-2.0"]]]
-   [:developers
-    [:developer
-     [:name "Jared Holmberg"]]]
-   #_[:scm
-    [:url "https://github.com/IntraCel/core"]
-    [:connection "scm:git:https://github.com/IntraCel/core.git"]
-    [:developerConnection "scm:git:ssh:git@github.com:IntraCel/core.git"]
-    [:tag (str "v" version)]]])
+
+
 
 (defn- jar-opts [opts]
   (let [version (if (:snapshot opts) snapshot version)]
@@ -342,3 +361,25 @@
       (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
                   :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))})))
   opts)
+
+(defn polydeploy
+  "Create and deploy library JAR files for the Polylith project.
+
+   Currently, creates 'poly'.
+
+   You can do a dry run by passing :installer :local which will
+   deploy the JARs into your local Maven cache instead of to Clojars."
+  [opts]
+  (let [projects (projects-to-deploy)]
+    (when (empty? projects)
+      (throw (ex-info "Cannot deploy projects. No projects have changed." {})))
+    (doseq [project projects]
+      (let [project-opts (assoc opts
+                                :project project
+                                :installer (get opts :installer :remote))]
+        (println (str "Starting deployment for " project " project."))
+        (-> project-opts
+            (jar)
+            (set/rename-keys {:jar-file :artifact})
+            (dd/deploy))
+        (println (str "Deployment completed for " project " project."))))))
