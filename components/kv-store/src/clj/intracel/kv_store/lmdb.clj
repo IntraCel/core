@@ -12,7 +12,8 @@
            [java.io File]
            [java.nio ByteBuffer]
            [java.nio.charset StandardCharsets]
-           [org.lmdbjava ByteBufferProxy Dbi DbiFlags Env EnvFlags PutFlags Txn]))
+           [org.lmdbjava ByteBufferProxy Dbi DbiFlags Env EnvFlags PutFlags Txn])
+  (:gen-class))
 ;; In order for LMDB Java to load into memory properly, the JVM_OPTS variable needs the 
 ;; following values set:
 ;; --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED

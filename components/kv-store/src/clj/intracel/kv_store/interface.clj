@@ -6,7 +6,8 @@ to use the component."
             [clj.intracel.kv-store.lmdb :as lmdb]
             [taoensso.timbre :as log])
   (:import [clj.intracel.api.interface.protocols KVStoreContext KVStoreDbiApi KVSerde]
-           [java.nio ByteBuffer]))
+           [java.nio ByteBuffer])
+  (:gen-class))
 
 (declare new-kv-store-context new-kv-db-context)
 

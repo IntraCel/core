@@ -2,7 +2,7 @@
         poly/api {:local/root "../../components/api"}
         poly/kv-store {:local/root "../../components/kv-store"}
         poly/serde {:local/root "../../components/serde"}
-        poly/sql-store {:local/root "../../components/sql-store"}}
+        poly/sql-store {:local/root "../../components/sql-store"}} 
 
  :aliases {:test {:extra-paths []
                   :extra-deps  {}}

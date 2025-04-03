@@ -66,7 +66,7 @@
            :basis     (b/create-basis {:project "../deps.edn"})
            :class-dir class-dir
            :target    "target"
-           :src-dirs  ["src" "resources" "../components" "../bases"]
+           :src-dirs  ["src" "resources" "../../components" "../../bases"]
            :scm       {:connection          "scm:git:https://github.com/IntraCel/core.git"
                        :developerConnection "scm:git:git@github.com:IntraCel/core.git"
                        :tag                 version
@@ -104,11 +104,17 @@
         (prn "Writing pom.xml...")
         (b/write-pom opts)
         (prn "Copying source...")
-        (b/copy-dir {:src-dirs ["src" "resources" "components" "bases"]
+        (b/copy-dir {:src-dirs ["src" "resources" "../../components" "../../bases"]
                      :target-dir class-dir})
         (prn "Compiling...")
+        (prn "Resolved src-dirs:" (map #(str (io/file %)) ["src" "resources" "../../components" "../../bases"]))
+        (doseq [dir ["src" "resources" "components" "bases"]]
+          (let [resolved-dir (io/file dir)]
+            (prn "Checking directory:" resolved-dir)
+            (prn "Exists?" (.exists resolved-dir))
+            (prn "Files:" (file-seq resolved-dir))))
         (b/compile-clj {:basis (:basis opts)
-                        :src-dirs ["src" "resources" "components" "bases"]
+                        :src-dirs ["src" "resources" "../../components" "../../bases"]
                         :class-dir class-dir})
         (prn "Building uberjar...")
         (b/uber (merge opts
@@ -138,6 +144,7 @@
         aliases      (with-dir (io/file project-root) (get-project-aliases))
         main         (-> aliases :uberjar :main)]
     (binding [b/*project-root* project-root]
+      (prn "Project root: " b/*project-root*)
       (let [class-dir "target/classes"
             uber-file (or uber-file
                           (-> aliases :uberjar :uber-file)
@@ -150,11 +157,17 @@
         (prn "Writing pom.xml...")
         (b/write-pom opts)
         (prn "Copying source...")
-        (b/copy-dir {:src-dirs ["src" "resources" "../../components" "../bases"]
+        (b/copy-dir {:src-dirs ["src" "resources" "../../components" "../../bases"]
                      :target-dir class-dir})
         (prn "Compiling...")
+        (prn "Resolved src-dirs:" (map #(str (io/file %)) ["src" "resources" "../../components" "../../bases"]))
+        (doseq [dir ["src" "resources" "components" "bases"]]
+          (let [resolved-dir (io/file dir)]
+            (prn "Checking directory:" resolved-dir)
+            (prn "Exists?" (.exists resolved-dir))
+            (prn "Files:" (file-seq resolved-dir))))
         (b/compile-clj {:basis (:basis opts)
-                        :src-dirs ["src" "resources" "../components" "../bases"]
+                        :src-dirs ["src" "resources" "../../components" "../../bases"]
                         :class-dir class-dir})
         (prn "Building library jar...")
         (b/jar (merge opts
