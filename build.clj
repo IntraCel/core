@@ -94,8 +94,9 @@
   "Returns the projects to deploy.
    Read more in the api/projects-to-deploy doc on how this works under the hood."
   []
-  (filterv #{"intracel-core"}
-           (api/projects-to-deploy "previous-release")))
+  #_(filterv #{"intracel-core"}
+           (api/projects-to-deploy "previous-release"))
+  ["intracel-core"])
 
 (defn jar
   "Builds a library jar for the specified project.
