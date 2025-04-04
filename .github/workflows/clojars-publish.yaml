@@ -3,7 +3,7 @@ name: Clojars Publish
 on:
   push:
     tags:
-      - 'v*'
+      - '*'
 
 jobs:
   publish:
@@ -43,13 +43,13 @@ jobs:
         run: |
           source ./set-jvm-opts.sh
           poly test
-      - name: Build Library Jar
-        env:
-          VERSION: ${{ env.GIT_TAG }} # Pass the tag to the build script
-        run: clojure -T:build libjar :project intracel-core
+      # - name: Build Library Jar
+      #   env:
+      #     VERSION: ${{ env.GIT_TAG }} # Pass the tag to the build script
+      #   run: clojure -T:build libjar :project intracel-core
       - name: Publish to Clojars
         env:
           VERSION: ${{ env.GIT_TAG }} # Pass the tag to the build script
           CLOJARS_USERNAME: ${{ secrets.CLOJARS_USER }}
           CLOJARS_PASSWORD: ${{ secrets.CLOJARS_DEPLOY_KEY }}
-        run: clojure -T:build deploy :project intracel-core
+        run: clojure -T:build polydeploy

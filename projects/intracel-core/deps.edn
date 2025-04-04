@@ -2,12 +2,13 @@
         poly/api {:local/root "../../components/api"}
         poly/kv-store {:local/root "../../components/kv-store"}
         poly/serde {:local/root "../../components/serde"}
-        poly/sql-store {:local/root "../../components/sql-store"}}
+        poly/sql-store {:local/root "../../components/sql-store"}} 
 
  :aliases {:test {:extra-paths []
                   :extra-deps  {}}
-           :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}
-                          slipset/deps-deploy           {:mvn/version "0.2.2"}}
+           :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.8"}
+                          slipset/deps-deploy           {:mvn/version "0.2.2"}
+                          polylith/clj-poly             {:mvn/version "0.2.21"}}
 
                                ;;Sets the build namespace as the default (see ns in build.clj)
                    :ns-default build}}}
