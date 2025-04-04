@@ -12,8 +12,8 @@
 Add the [relevant dependency](#latest-releases) to your project:
 
 ```clojure
-Leiningen: [clj.intracel/core               "x-y-z"] ; or
-deps.edn:   clj.intracel/core {:mvn/version "x-y-z"}
+Leiningen: [clj.intracel/core               "0.1.87"] ; or
+deps.edn:   clj.intracel/core {:mvn/version "0.1.87"}
 ```
 
 ## JVM Settings
