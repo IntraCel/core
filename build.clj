@@ -127,7 +127,7 @@
             jar-file (or jar-file
                          (-> aliases :jar :jar-file)
                          (str "target/" project "-thin.jar"))
-            lib (symbol "polylith" (str "clj-" project))
+            #_lib #_(symbol "polylith" (str "clj-" project))
             current-dir (System/getProperty "user.dir")
             current-rel #(str/replace % (str current-dir "/") "")
             directory? #(let [f (java.io.File. %)]
@@ -138,9 +138,9 @@
                          :class-dir class-dir
                          :jar-file jar-file
                          :lib lib
-                         :scm {:tag version
-                               :name "git"
-                               :url "https://github.com/polyfy/polylith"
+                         :scm {:tag                 version
+                               :name                "git"
+                               :url                 "https://github.com/IntraCel/core"
                                :connection          "scm:git:https://github.com/IntraCel/core.git"
                                :developerConnection "scm:git:git@github.com:IntraCel/core.git"}
                          :src-pom "partial_pom.xml"
