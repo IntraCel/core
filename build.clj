@@ -94,8 +94,9 @@
   "Returns the projects to deploy.
    Read more in the api/projects-to-deploy doc on how this works under the hood."
   []
-  (filterv #{"intracel-core"}
-           (api/projects-to-deploy "previous-release")))
+  #_(filterv #{"intracel-core"}
+           (api/projects-to-deploy "previous-release"))
+  ["intracel-core"])
 
 (defn jar
   "Builds a library jar for the specified project.
@@ -126,7 +127,7 @@
             jar-file (or jar-file
                          (-> aliases :jar :jar-file)
                          (str "target/" project "-thin.jar"))
-            lib (symbol "polylith" (str "clj-" project))
+            ;;lib (symbol "polylith" (str "clj-" project))
             current-dir (System/getProperty "user.dir")
             current-rel #(str/replace % (str current-dir "/") "")
             directory? #(let [f (java.io.File. %)]
@@ -137,9 +138,9 @@
                          :class-dir class-dir
                          :jar-file jar-file
                          :lib lib
-                         :scm {:tag version
-                               :name "git"
-                               :url "https://github.com/polyfy/polylith"
+                         :scm {:tag                 version
+                               :name                "git"
+                               :url                 "https://github.com/IntraCel/core"
                                :connection          "scm:git:https://github.com/IntraCel/core.git"
                                :developerConnection "scm:git:git@github.com:IntraCel/core.git"}
                          :src-pom "partial_pom.xml"
