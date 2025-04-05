@@ -30,7 +30,7 @@
     [kvs-db db-name]
     [kvs-db db-name chan-opts]
     [kvs-db db-name chan-opts db-opts]
-    [kvs-db db-name chan-opts db-opts pre-get-hook-fn pre-put-hook-fn]
+    [kvs-db db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn pre-put-hook-fn]
     "Returns a hosted embedded database that implements the [[clj.intracel.api.interface.protocols/KVStoreDbiApi]]. 
      All multi-arity versions of the kvs-db reference and the db-name.
      The 3-arity version allows the caller to customize the settings of the underlying channel used for writing to the database. 
@@ -83,6 +83,7 @@
     |                   |                                               This option is not allowed in a read-only transaction or a read-only |
     |                   |                                               environment. 
     |                   |                                               Correlates to [org.lmdbjava.DbiFlagsMDB_CREATE(0x4_0000)(https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_CREATE)|
+    | `pre-del-hook-fn` | A function that accepts a single `key` arg and returns the same `key` that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-del]] function. |
     | `pre-get-hook-fn` | A function that accepts a single `key` arg and returns a new `key` that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-get]] function. |
     | `pre-put-hook-fn` | A function that accepts a `key` arg, and a `value` arg and returns a new `key` and `value` in a two-element vector that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-get]] function. |
     Returns:
@@ -212,6 +213,21 @@
     
     Returns:
     A map containing the key `written?` set to true or false. If false, use the `msg` key to check the error message.")
+  
+  (set-pre-del-hook [kvs-db pre-fn]
+    "This enables the caller to customize the behavior performed when doing a key removal in [[kv-del]] by allowing caller code to pre-process the key.
+    This could be useful for performing actions on related data before the key gets removed.. For example, a user may have related addresses in another 
+    database that could be removed to perform proper clean-up.
+    
+    Depends on: [[db]] 
+    | Parameter   | Description |
+    | ------------|-------------|
+    | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
+    | `pre-fn`    | A function that accepts a single `key` arg and returns the same `key` that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-del]] function. ||
+
+    Returns:
+    A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern.")
+  
   (kv-del
     [kvs-db key]
     [kvs-db key key-serde]

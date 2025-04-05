@@ -74,9 +74,9 @@ to use the component."
   ([kvs-db-ctx db-name chan-opts]
    (db kvs-db-ctx db-name chan-opts nil))
   ([kvs-db-ctx db-name chan-opts db-opts]
-   (db kvs-db-ctx db-name chan-opts db-opts nil nil))
-  ([kvs-db-ctx db-name chan-opts db-opts pre-get-hook-fn pre-put-hook-fn]
-   (proto/db kvs-db-ctx db-name chan-opts db-opts pre-get-hook-fn pre-put-hook-fn)))
+   (db kvs-db-ctx db-name chan-opts db-opts nil nil nil))
+  ([kvs-db-ctx db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn pre-put-hook-fn]
+   (proto/db kvs-db-ctx db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn pre-put-hook-fn)))
 
 (defn set-key-serde
   "Sets the default key SerDe used for serializing and deserializing to and from the database. See [[clj.intracel.api.kv-store/KVStoreDb]].
@@ -124,6 +124,13 @@ Depends on: [[db]]."
 Depends on: [[db]]"
   [^KVStoreDbiApi kvs-db pre-fn]
   (proto/set-pre-get-hook kvs-db pre-fn))
+
+(defn set-pre-del-hook 
+  "This enables the caller to customize the behavior performed when doing a key removal in [[kv-del]] by allowing caller code to pre-process the key. See [[clj.intracel.api.kv-store/KVStoreDb]].
+  
+  Depends on: [[db]]"
+  [kvs-db pre-fn]
+  (proto/set-pre-del-hook kvs-db pre-fn))
 
 (defn kv-get
   "Gets a value from the KV-Store. If set, the `pre-get-hook` fn will be called on the key provided. This is a multi-arity function with the 2-parameter version using the default SerDe (see [[set-key-serde]], [[set-val-serde]]) and the 4-parameter version allowing the caller to provide its own key and value SerDes. See [[clj.intracel.api.kv-store/KVStoreDb]].

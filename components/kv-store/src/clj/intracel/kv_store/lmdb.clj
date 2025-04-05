@@ -39,11 +39,11 @@
 (def one-gigabyte 1073741824)
 (def default-mem-size one-gigabyte)
 
-(declare translate-dbi-flags configure-channel pre-process-key-for-get pre-process-key-and-value-for-put)
+(declare translate-dbi-flags configure-channel pre-process-key-for-del pre-process-key-for-get pre-process-key-and-value-for-put)
 
 
 
-(defrecord LmdbRec [cmd-chan dbi key-serde kvs-ctx max-key-size pre-get-hook-fn pre-put-hook-fn val-serde]
+(defrecord LmdbRec [cmd-chan dbi key-serde kvs-ctx max-key-size pre-del-hook-fn pre-get-hook-fn pre-put-hook-fn val-serde]
   proto/KVStoreDbiApi
   (start [kvs-db]
     (log/info "[kv-store](LmdbRec) Starting KV-Store Service.")
@@ -54,7 +54,9 @@
             (when (= (mod c 100) 0)
               (log/debug "[kv-store](LmdbRec) Listening in go loop."))
             (let [{:keys [ack-chan cmd key value k-serde v-serde]} (<! @cmd-chan)
-                  [key value] (pre-process-key-and-value-for-put key value @pre-put-hook-fn)
+                  [key value] (case cmd 
+                                :put    (pre-process-key-and-value-for-put key value @pre-put-hook-fn)
+                                :delete (pre-process-key-for-del           key @pre-del-hook-fn))
                   ks      (or k-serde @key-serde)
                   vs      (or v-serde @val-serde)
                   _       (log/debugf "[kv-store](LmdbRec) Serializing key: %s, val: %s" key value)
@@ -175,6 +177,10 @@
             (proto/deserialize vs found)
             nil)))))
 
+  (set-pre-del-hook [kvs-db pre-fn]
+    (reset! (:pre-del-hook-fn kvs-db) pre-fn)
+    kvs-db)
+
   (kv-del [kvs-db key]
     (go (>! @cmd-chan {:cmd :delete
                        :key key})))
@@ -197,6 +203,20 @@
           (throw (ex-info "[pre-get-hook-fn] The pre-get-hook-fn provided returned an unusable key for performing a kv-get operation on the KV-Store."
                           {:cause #{:invalid-response-from-pre-get-hook-fn}}))
           transformed-key))
+      key)))
+
+(defn- pre-process-key-for-del [key pre-del-hook-fn]
+  (log/debugf "[pre-process-key-for-del] key: %s" key)
+  (log/debugf "[pre-process-key-for-del] pre-del-hook-fn type: %s" (type pre-del-hook-fn))
+  (let [pre-key-fn (if (some? pre-del-hook-fn)
+                     pre-del-hook-fn
+                     nil)]
+    (if (some? pre-key-fn)
+      (let [updated-key (pre-key-fn key)]
+        (if (nil? updated-key)
+          (throw (ex-info "[pre-del-hook-fn] The pre-del-hook-fn provided returned an unusable key for performing a kv-del operation on the KV-Store."
+                          {:cause #{:invalid-response-from-pre-del-hook-fn}}))
+          updated-key))
       key)))
 
 (defn- pre-process-key-and-value-for-put [key value pre-put-hook-fn]
@@ -246,15 +266,15 @@
 (defrecord LmdbContext [kvs-ctx db-instances]
   KVStoreDbContextApi
   (db [this db-name]
-    (proto/db this db-name nil nil nil nil))
+    (proto/db this db-name nil nil nil nil nil))
 
   (db [this db-name chan-opts]
-    (proto/db this db-name chan-opts nil nil nil))
+    (proto/db this db-name chan-opts nil nil nil nil))
 
   (db [this db-name chan-opts db-opts]
-    (proto/db this db-name chan-opts db-opts nil nil))
+    (proto/db this db-name chan-opts db-opts nil nil nil))
 
-  (db [this db-name chan-opts db-opts pre-get-hook-fn pre-put-hook-fn]
+  (db [this db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn pre-put-hook-fn]
     (let [max-key-size (.getMaxKeySize (:ctx kvs-ctx))
           dbi (if (contains? @(:db-instances this) db-name)
                 (get @(:db-instances this) db-name)
@@ -266,6 +286,7 @@
                                                :key-serde       (atom (serde/string-serde))
                                                :kvs-ctx         kvs-ctx
                                                :max-key-size    max-key-size
+                                               :pre-del-hook-fn (atom pre-del-hook-fn)
                                                :pre-get-hook-fn (atom pre-get-hook-fn)
                                                :pre-put-hook-fn (atom pre-put-hook-fn)
                                                :val-serde       (atom (serde/string-serde))})
