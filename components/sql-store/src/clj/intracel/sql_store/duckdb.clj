@@ -18,25 +18,29 @@
                (throw (ex-info (format "[%s/create-sql-store-context] Unable to produce a new SQLStoreContext. Are you missing a :intracel.sql-store.duckdb/storage-path in ctx-opts?" log-prefix) {:cause :missing-storage-path})))
         _    (when-not (.exists path)
                (.mkdirs path))
+        store-name   "intracel-duckdb"
         pool-path    (str storage-path
                           (if (st/ends-with? storage-path "/") "" "/")
-                          "conn-pool")
+                          store-name)
+        
+        db-url       (connection/jdbc-url {:dbtype "duckdb" :dbname pool-path})
+        _            (log/infof "[new-sql-store-context] jdbc-url: %s" db-url)
         _            (log/infof "[new-sql-store-context] pool-path: %s" pool-path)
         pool         ^HikariDataSource (connection/->pool com.zaxxer.hikari.HikariDataSource
-                                                          {:jdbcUrl (connection/jdbc-url {:dbtype "duckdb" :dbname pool-path})
-                                                         ;;ignored on duckdb but needed for connection pool
-                                                           :username "dbuser"
-                                                         ;;ignored on duckdb but needed for connection pool
-                                                           :password "dbpassword"})
-        props        (-> (Properties.)
-                         (.setProperty DuckDBDriver/JDBC_STREAM_RESULTS "true"))
+                                                          {:jdbcUrl db-url
+                                                           ;;ignored on duckdb but needed for connection pool
+                                                           ;;:username "dbuser"
+                                                           ;;ignored on duckdb but needed for connection pool
+                                                           ;;:password "dbpassword"
+                                                           })
+        props         (Properties.)
+        ;;_             (.setProperty props "username" "dbuser")
+        ;;_             (.setProperty props "password" "dbpassword")
+        ;;_             (.setProperty props DuckDBDriver/JDBC_STREAM_RESULTS "true")
+        
 
-
-        append-path (str storage-path
-                         (if (st/ends-with? storage-path "/") "" "/")
-                         "conn-appender")
         _ (log/infof "[new-sql-store-context] storage-path: %s" storage-path)
-        appender-conn ^DuckDBConnection (DriverManager/getConnection (str "jdbc:duckdb:" append-path) props)]
+        appender-conn ^DuckDBConnection (DriverManager/getConnection db-url props)]
     {:ctx {:pool          pool
            :appender-conn appender-conn}}))
 
