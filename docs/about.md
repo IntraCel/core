@@ -9,7 +9,7 @@ All of this adds up to technical debt. Tech debt is just like credit, buy now, p
 With the advent of Big Data and AI, our world is experiencing an explosion of data. In an article published by [G2](https://www.g2.com/articles/big-data-statistics), it is estimated that in 2025, the world will produce 463 ZB (Zeta Bytes, that's 463,000,000,000,000,000,000,000 [21 zeros] Bytes) every day at a worth of over $220 billion. 
 
 Every 60 seconds .. 
-![The Data Explosion](docs/images/Internet-in-60-Seconds.drawio.png "The Data Explosion")
+![The Data Explosion](images/Internet-in-60-Seconds.drawio.png "The Data Explosion")
 
 The average company now wrangles with _400_ different data sources!
 
