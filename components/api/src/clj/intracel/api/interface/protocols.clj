@@ -54,8 +54,8 @@
     |                   | This allows the user to override the default `(chan (buffer 10000))` to any type of channel desired.
     |                   | Options are:
     |                   | - `:ic-chan-opts/buf-size`: Use a buffered channel with size provided. Defaults to 10,000.,
-    |                   | - `:ic-chan-opts/replacement-chan`: Use the core.asyn channel provided instead of the default buffered channel.|
-    | `db-name`         | The UTF-8 formatted name of the database to use. If this is the first time using it, the database instance will be created automatically. |
+    |                   | - `:ic-chan-opts/replacement-chan`: Use the core.asyn channel provided instead of the default buffered channel.
+    | `db-name`         | The UTF-8 formatted name of the database to use. If this is the first time using it, the database instance will be created automatically. 
     | `db-opts`         | Vector containing options to adjust the behavior of the database when initializing. 
     |                   | 
     |                   | - `:ic-db-flags/reverse-key`: Use reverse string keys. Keys are strings to be compared in reverse order, from the end of the  
@@ -87,7 +87,7 @@
     |                   |                                                             strings in reverse order. 
     |                   |                                                             Correlates to [org.lmdbjava.DbiFlags/MDB_REVERSEDUP(0x40)](https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_REVERSEDUP), 
     |                   | - `:ic-db-flags/create-db-if-not-exists`: Create the named database if it doesn't exist. 
-    |                   |                                               This option is not allowed in a read-only transaction or a read-only |
+    |                   |                                               This option is not allowed in a read-only transaction or a read-only 
     |                   |                                               environment. 
     |                   |                                               Correlates to [org.lmdbjava.DbiFlagsMDB_CREATE(0x4_0000)(https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_CREATE)|
     | `pre-del-hook-fn` | A function that accepts a single `key` arg and returns the same `key` that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-del]] function. |
@@ -126,7 +126,7 @@
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
-    | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]] If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. ||
+    | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]] If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. |
     Returns:
     A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern with the default `clj.intracel.api.kv-store/KVSerde` for keys configured.")
   (set-val-serde [kvs-db val-serde]
@@ -136,7 +136,7 @@
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
-    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]] If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. ||
+    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]] If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. |
     Returns:
     A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern with the default `clj.intracel.api.kv-store/KVSerde` for keys configured.")
   
@@ -148,7 +148,7 @@
       | Parameter   | Description |
       | ------------|-------------|
       | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
-      | `pre-fn`    | A function that accepts a `key` arg, and a `value` arg and returns a new `key` and a new `value` in a two element vector that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-put]] and [[kv-put-async]] functions. ||
+      | `pre-fn`    | A function that accepts a `key` arg, and a `value` arg and returns a new `key` and a new `value` in a two element vector that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-put]] and [[kv-put-async]] functions. |
   
       Returns:
       A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern.")
@@ -168,7 +168,7 @@
     | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
     | `value`     | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serailize the `value` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
     | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]. Not available in 3 parameter version of this function.|
-    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in 3 parameter version of this function.||
+    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in 3 parameter version of this function.|
     Returns:
     A map containing the key `written?` set to true or false. If false, use the `msg` key to check the error message.")
   (kv-put-async
@@ -186,7 +186,7 @@
     | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
     | `value`     | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serailize the `value` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
     | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]. Not available in 3 parameter version of this function.|
-    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in 3 parameter version of this function.||
+    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in 3 parameter version of this function.|
     Returns:
     A core.async channel that consumers can use to listen for acknowledgements. A response will be a map containing the `written?` set to true or false. If false, use the `msg` key to check the error message.")
   
@@ -199,14 +199,14 @@
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
-    | `pre-fn`    | A function that accepts a single `key` arg and returns a new `key` that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-get]] function. ||
+    | `pre-fn`    | A function that accepts a single `key` arg and returns a new `key` that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-get]] function. |
 
     Returns:
     A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern.")
   (kv-get
     [kvs-db key]
     [kvs-db key key-serde val-serde]
-    "Puts a value into the KV-Store. If a value the same key exists, it will be replaced with the value argument provided.
+    "Gets a value from the KV-Store. If the key does not exist, a nil will be returned.
      The 2 parameter version of [[kv-get]] uses the default SerDe (see [[set-key-serde]], [[set-val-serde]]).
      The 4 parameter version of [[kv-get]] allows the caller to supply a specific `clj.intracel.api.kv-store/KVSerde` to serialize the key properly on look-up and deserialize the key and value properly on retrieval.
 
@@ -216,10 +216,10 @@
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
     | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
     | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]. Not available in the 2 parameter version of this function.|
-    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in the 2 parameter version of this function.||
+    | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in the 2 parameter version of this function.|
     
     Returns:
-    A map containing the key `written?` set to true or false. If false, use the `msg` key to check the error message.")
+    The value associated with the `key` provided or nil if not found.")
   
   (set-pre-del-hook [kvs-db pre-fn]
     "This enables the caller to customize the behavior performed when doing a key removal in [[kv-del]] by allowing caller code to pre-process the key.
