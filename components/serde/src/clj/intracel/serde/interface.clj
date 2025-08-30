@@ -23,7 +23,8 @@
             [clj.intracel.serde.short-serde :as short-serde]
             [clj.intracel.serde.string-serde :as string-serde]
             [clj.intracel.serde.uint-128-serde :as u128-int-serde]
-            [clj.intracel.serde.interface :as serde]))
+            [clj.intracel.serde.interface :as serde]
+            [clj.intracel.api.interface.protocols :as proto :refer [KVSerde]]))
 
 (defn big-decimal-serde
   "Creates a [[clj.intracel.api.interface.protocols/KVSerde]] that can handle large, high-precision fractions represented as `java.math.BigDecimal`.
@@ -131,16 +132,10 @@
   | --------- |-------------|
   | `serde`   | A valid instance of a `clj.intracel.api.protocols/KVSerde` |
      
-  Returns:
-  A keyword representing the type of serde provided."
+  Returns: A keyword representing the type of the  `clj.intracel.api.protocols/KVSerde` provided."
   [serde] 
   (if (and (some? serde)
-           (satisfies? serde/KVSerde serde))
+           (satisfies? KVSerde serde))
     (serde/serde-type serde)
     (throw (ex-info "[serde-type] Invalid argument provided. Must provide a valid instance of a clj.intracel.api.protocols/KVSerde."
                     {:cause #{:invalid-argument}}))))
-
-
-
-
-
