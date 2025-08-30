@@ -1,7 +1,6 @@
 (ns clj.intracel.serde.uint-128-serde
   (:require [clj.intracel.api.interface.protocols :as proto]
-            [clj.intracel.serde.big-int-helper :as helper]
-            [clj.intracel.serde.interface :as serde])
+            [clj.intracel.serde.big-int-helper :as helper])
   (:import [java.math BigInteger]
            [java.nio ByteBuffer]))
 

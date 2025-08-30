@@ -1,6 +1,5 @@
 (ns clj.intracel.serde.string-serde
-  (:require [clj.intracel.api.interface.protocols :as proto]
-            [clj.intracel.serde.interface :as serde])
+  (:require [clj.intracel.api.interface.protocols :as proto])
   (:import [java.nio ByteBuffer]
            [java.nio.charset StandardCharsets]))
 

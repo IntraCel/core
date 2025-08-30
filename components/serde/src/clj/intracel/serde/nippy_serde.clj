@@ -1,7 +1,6 @@
 (ns clj.intracel.serde.nippy-serde
   (:require [clj.intracel.api.interface.protocols :as proto]
-            [taoensso.nippy :as nippy]
-            [clj.intracel.serde.interface :as serde])
+            [taoensso.nippy :as nippy])
   (:import [java.nio ByteBuffer]))
 
 (defrecord NippySerde []
