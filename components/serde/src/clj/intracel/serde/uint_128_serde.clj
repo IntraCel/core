@@ -1,6 +1,7 @@
 (ns clj.intracel.serde.uint-128-serde
   (:require [clj.intracel.api.interface.protocols :as proto]
-            [clj.intracel.serde.big-int-helper :as helper])
+            [clj.intracel.serde.big-int-helper :as helper]
+            [clj.intracel.serde.interface :as serde])
   (:import [java.math BigInteger]
            [java.nio ByteBuffer]))
 
@@ -85,7 +86,10 @@
 
   (deserialize [this data]
     ;;data is a ByteBuffer that can be deserialized into a BigInteger
-    (helper/deser-big-int-from-byte-buf data)))
+    (helper/deser-big-int-from-byte-buf data))
+
+  (serde-type [this]
+    :uint-128))
 
 (defn create []
   (map->UInt128Serde {}))

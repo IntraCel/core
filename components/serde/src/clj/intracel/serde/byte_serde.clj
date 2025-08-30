@@ -15,22 +15,25 @@
             (< data Byte/MIN_VALUE)
             (throw (ex-info (format "[byte-serde/serialize] Invalid argument. The data argument is beyond the minimum value of an 8-bit integer allows. Value provided: %s, Allowed: %s" data Byte/MIN_VALUE)
                             {:cause #{:invalid-argument}}))
-      ;; In Java NIO, the ByteBuffer.flip() method is used to transition a buffer from its 
-      ;; "writing mode" to its "reading mode" by essentially setting the buffer's limit to 
-      ;; its current position and then resetting the position back to zero, effectively 
-      ;; preparing the buffer to be read from the beginning of the data it has accumulated 
-      ;; so far.
-      ;; See https://docs.oracle.com/javase/6/docs/api/java/nio/Buffer.html#flip()
+            ;; In Java NIO, the ByteBuffer.flip() method is used to transition a buffer from its 
+            ;; "writing mode" to its "reading mode" by essentially setting the buffer's limit to 
+            ;; its current position and then resetting the position back to zero, effectively 
+            ;; preparing the buffer to be read from the beginning of the data it has accumulated 
+            ;; so far.
+            ;; See https://docs.oracle.com/javase/6/docs/api/java/nio/Buffer.html#flip()
             :else (let [bytes (byte-array 1)
                         _     (aset-byte bytes 0 data)]
                     (-> buf
-                      ;;Put a byte array with a single byte value into the ByteBuffer
+                        ;;Put a byte array with a single byte value into the ByteBuffer
                         (.put bytes)
                         (.flip))))))
 
   (deserialize [this data]
     ;;data is a ByteBuffer
-    (.get data 0)))
+    (.get data 0))
+
+  (serde-type [this]
+    :byte))
 
 (defn create []
   (map->ByteSerde {}))

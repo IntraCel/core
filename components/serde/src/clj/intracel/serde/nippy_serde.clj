@@ -1,6 +1,7 @@
 (ns clj.intracel.serde.nippy-serde
   (:require [clj.intracel.api.interface.protocols :as proto]
-            [taoensso.nippy :as nippy])
+            [taoensso.nippy :as nippy]
+            [clj.intracel.serde.interface :as serde])
   (:import [java.nio ByteBuffer]))
 
 (defrecord NippySerde []
@@ -26,7 +27,10 @@
             _     (.get data bytes)]
         (nippy/thaw bytes))
       (throw (ex-info "[nippy-serde] The data argument provided is not a valid ByteBuffer."
-                      {:cause #{:invalid-argument}})))))
+                      {:cause #{:invalid-argument}}))))
+
+  (serde-type [this]
+    :nippy))
 
 (defn create []
   (map->NippySerde {}))

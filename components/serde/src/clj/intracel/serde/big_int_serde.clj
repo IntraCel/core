@@ -10,7 +10,11 @@
     (helper/ser-string-as-big-int-to-byte-buf data))
 
   (deserialize [this data]
-    (helper/deser-big-int-from-byte-buf data)))
+    (helper/deser-big-int-from-byte-buf data))
+  
+  (serde-type [this]
+    :big-int)
+  )
 
 
 (defn create []

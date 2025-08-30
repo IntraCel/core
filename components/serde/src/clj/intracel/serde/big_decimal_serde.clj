@@ -24,7 +24,10 @@
   (deserialize [this data]
     ;;data is a ByteBuffer of the BigDecimal encoded as a string
     (let [dec-str (str (.decode UTF_8 data))]
-      (BigDecimal. dec-str))))
+      (BigDecimal. dec-str)))
+  
+  (serde-type [this]
+    :big-decimal))
 
 (defn create []
   (map->BigDecimalSerde {}))

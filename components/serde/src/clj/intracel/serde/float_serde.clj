@@ -1,5 +1,6 @@
 (ns clj.intracel.serde.float-serde
-  (:require [clj.intracel.api.interface.protocols :as proto])
+  (:require [clj.intracel.api.interface.protocols :as proto]
+            [clj.intracel.serde.interface :as serde])
   (:import [java.nio ByteBuffer]))
 
 (defonce NUM_BITS_IN_FLOAT 32)
@@ -27,8 +28,11 @@
                     (.flip))))
 
   (deserialize [this data]
-  ;;data is a ByteBuffer
-    (.getFloat data)))
+    ;;data is a ByteBuffer
+    (.getFloat data))
+
+  (serde-type [this]
+    :float))
 
 (defn create []
   (map->FloatSerde {}))

@@ -1,5 +1,6 @@
 (ns clj.intracel.serde.short-serde
-  (:require [clj.intracel.api.interface.protocols :as proto])
+  (:require [clj.intracel.api.interface.protocols :as proto]
+            [clj.intracel.serde.interface :as serde])
   (:import [java.nio ByteBuffer]))
 
 (defonce NUM_BITS_IN_BYTE 8)
@@ -28,7 +29,10 @@
 
   (deserialize [this data]
     ;;data is a ByteBuffer
-    (.getShort data)))
+    (.getShort data))
+  
+  (serde-type [this]
+    :short))
 
 (defn create []
   (map->ShortSerde {}))

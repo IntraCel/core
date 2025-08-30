@@ -1,5 +1,6 @@
 (ns clj.intracel.serde.double-serde
-  (:require [clj.intracel.api.interface.protocols :as proto])
+  (:require [clj.intracel.api.interface.protocols :as proto]
+            [clj.intracel.serde.interface :as serde])
   (:import [java.nio ByteBuffer]))
 
 (defonce NUM_BITS_IN_DOUBLE 64)
@@ -28,7 +29,10 @@
 
   (deserialize [this data]
   ;;data is a ByteBuffer
-    (.getDouble data)))
+    (.getDouble data))
+  
+  (serde-type [this]
+    :double))
 
 (defn create []
   (map->DoubleSerde {}))

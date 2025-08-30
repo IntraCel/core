@@ -8,16 +8,23 @@
     | Parameter   | Description |
     | ------------|-------------|
     | `kv-serde`  | A reference to implementation of the `clj.intracel.api.interface.protocols/KVSerde` to perform the serialization. |
-    | `data`      | The data that is meant to be serialized. Could be in any format but should be known to the developer so that the serialization works properly. ||
+    | `data`      | The data that is meant to be serialized. Could be in any format but should be known to the developer so that the serialization works properly. |
     Returns: `java.nio.ByteBuffer` to be persisted into the KV-Store. A failed attempt to serialize should result in a `clojure.lang.ExceptionInfo`")
   (deserialize [kv-serde data]
     "Accepts a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html) and produces it into the desired Clojure data format (e.g. - String, Map, Avro, etc.).
     | Parameter   | Description |
     | ------------|-------------|
     | `kv-serde`  | A reference to implementation of the `clj.intracel.api..interface.protocols/KVSerde` to perform the serialization. |
-    | `data`      | The data that is meant to be deserialized. It will come from KV-Store in the form of a `java.nio.ByteBuffer` to be converted into the desired Clojure data format. ||
+    | `data`      | The data that is meant to be deserialized. It will come from KV-Store in the form of a `java.nio.ByteBuffer` to be converted into the desired Clojure data format. |
     Returns: 
-    Data converted from a `java.nio.ByteBuffer` coming from the KV-Store into the desired Clojure data format. A failed attempt to deserialize should result in a `clojure.lang.ExceptionInfo`"))
+    Data converted from a `java.nio.ByteBuffer` coming from the KV-Store into the desired Clojure data format. A failed attempt to deserialize should result in a `clojure.lang.ExceptionInfo`")
+  (serde-type [kv-serde]
+    "Returns a keyword that identifies the type of SerDe this is.
+    | Parameter   | Description |
+    | ------------|-------------|
+    | `kv-serde`  | A reference to implementation of the `clj.intracel.api.interface.protocols/KVSerde` to perform the serialization. |
+    Returns:
+    A keyword that identifies the type of SerDe this is. This could be useful for logging or debugging purposes."))
 
 (defrecord KVStoreContext [ctx]
   Closeable
@@ -46,24 +53,24 @@
     |                   | KV-Store uses a multi-producer, single-consumer core.async channel pattern so that a single thread safely performs puts to the database. 
     |                   | This allows the user to override the default `(chan (buffer 10000))` to any type of channel desired.
     |                   | Options are:
-    |                   | * `:ic-chan-opts/buf-size`: Use a buffered channel with size provided. Defaults to 10,000.,
-    |                   | * `:ic-chan-opts/replacement-chan`: Use the core.asyn channel provided instead of the default buffered channel.|
+    |                   | - `:ic-chan-opts/buf-size`: Use a buffered channel with size provided. Defaults to 10,000.,
+    |                   | - `:ic-chan-opts/replacement-chan`: Use the core.asyn channel provided instead of the default buffered channel.|
     | `db-name`         | The UTF-8 formatted name of the database to use. If this is the first time using it, the database instance will be created automatically. |
     | `db-opts`         | Vector containing options to adjust the behavior of the database when initializing. 
     |                   | 
-    |                   | * `:ic-db-flags/reverse-key`: Use reverse string keys. Keys are strings to be compared in reverse order, from the end of the  
+    |                   | - `:ic-db-flags/reverse-key`: Use reverse string keys. Keys are strings to be compared in reverse order, from the end of the  
     |                   |                                   strings to the beginning. By default, keys are treated as strings and 
     |                   |                                   compared from beginning to end.
     |                   |                                   Correlates to [org.lmdbjava.DbiFlags/MDB_REVERSEKEY(0x02)](https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_REVERSEKEY), 
-    |                   | * `:ic-db-flags/multi-value-keys`: Use sorted duplicates. 
+    |                   | - `:ic-db-flags/multi-value-keys`: Use sorted duplicates. 
     |                   |                                    Duplicate keys may be used in the database. Or, from another perspective, 
     |                   |                                    keys may have multiple data items, stored in sorted order. By default keys 
     |                   |                                    must be unique and may have only a single data item.
     |                   |                                    Correlates to [org.lmdbjava.DbiFlags/MDB_DUPSORT(0x04)](https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_DUPSORT), 
-    |                   | * `:ic-db-flags/integer-keys`: Numeric keys in native byte order: either unsigned int or size_t. The keys 
+    |                   | - `:ic-db-flags/integer-keys`: Numeric keys in native byte order: either unsigned int or size_t. The keys 
     |                   |                                    must all be of the same size.
     |                   |                                    Correlates to [org.lmdbjava.DbiFlags/MDB_INTEGERKEY(0x08)](https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_INTEGERKEY), 
-    |                   | * `:ic-db-flags/sort-fixed-sized-duplicate-items`: With {@link #MDB_DUPSORT}, sorted dup items have fixed size. 
+    |                   | - `:ic-db-flags/sort-fixed-sized-duplicate-items`: With {@link #MDB_DUPSORT}, sorted dup items have fixed size. 
     |                   |                                                        This flag may only be used in combination with {@link #MDB_DUPSORT}. This 
     |                   |                                                        option tells the library that the data items for this database are all the
     |                   |                                                        same size, which allows further optimizations in storage and retrieval. 
@@ -71,15 +78,15 @@
     |                   |                                                        and {@link SeekOp#MDB_NEXT_MULTIPLE} cursor operations may be used to 
     |                   |                                                        retrieve multiple items at once. 
     |                   |                                                        Correlates to [org.lmdbjava.DbiFlags/MDB_DUPFIXED(0x10)](https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_DUPFIXED), 
-    |                   | * `:ic-db-flags/duplicates-are-binary-integers`: With {@link #MDB_DUPSORT}, dups are {@link #MDB_INTEGERKEY}-style integers. 
+    |                   | - `:ic-db-flags/duplicates-are-binary-integers`: With {@link #MDB_DUPSORT}, dups are {@link #MDB_INTEGERKEY}-style integers. 
     |                   |                                                      This option specifies that duplicate data items are binary integers, 
     |                   |                                                      similar to {@link #MDB_INTEGERKEY} keys. 
     |                   |                                                      Correlates to [org.lmdbjava.DbiFlags/MDB_INTEGERDUP(0x20)](https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_INTEGERDUP), 
-    |                   | * `:ic-db-flags/compare-duplicates-as-reverse-strings`: With {@link #MDB_DUPSORT}, use reverse string dups. 
+    |                   | - `:ic-db-flags/compare-duplicates-as-reverse-strings`: With {@link #MDB_DUPSORT}, use reverse string dups. 
     |                   |                                                             This option specifies that duplicate data items should be compared as 
     |                   |                                                             strings in reverse order. 
     |                   |                                                             Correlates to [org.lmdbjava.DbiFlags/MDB_REVERSEDUP(0x40)](https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_REVERSEDUP), 
-    |                   | * `:ic-db-flags/create-db-if-not-exists`: Create the named database if it doesn't exist. 
+    |                   | - `:ic-db-flags/create-db-if-not-exists`: Create the named database if it doesn't exist. 
     |                   |                                               This option is not allowed in a read-only transaction or a read-only |
     |                   |                                               environment. 
     |                   |                                               Correlates to [org.lmdbjava.DbiFlagsMDB_CREATE(0x4_0000)(https://www.javadoc.io/static/org.lmdbjava/lmdbjava/0.9.0/org/lmdbjava/DbiFlags.html#MDB_CREATE)|
@@ -97,7 +104,7 @@
     Depends on: [[db]] 
     | Parameter   | Description |
     | ------------|-------------|
-    | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. ||
+    | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
     Returns:
     A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern with the default `clj.intracel.api.kv-store/KVSerde` for keys configured.")
 
@@ -108,7 +115,7 @@
     Depends on: [[db]] 
     | Parameter   | Description |
     | ------------|-------------|
-    | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. ||
+    | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
     Returns:
     A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern with the default `clj.intracel.api.kv-store/KVSerde` for keys configured.")
 
