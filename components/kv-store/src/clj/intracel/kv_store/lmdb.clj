@@ -6,7 +6,7 @@
              :refer [>! <! >!! <!! go chan buffer close! thread
                      alts! alts!! timeout]]
             [clojure.java.io :as io]
-            [clojure.string :as st] 
+            [clojure.string :as st]
             [taoensso.timbre :as log])
   (:import [clj.intracel.api.interface.protocols KVStoreDbContextApi]
            [java.io File]
@@ -39,11 +39,11 @@
 (def one-gigabyte 1073741824)
 (def default-mem-size one-gigabyte)
 
-(declare translate-dbi-flags configure-channel pre-process-key-for-del pre-process-key-for-get pre-process-key-and-value-for-put)
+(declare translate-dbi-flags configure-channel pre-process-key-for-del pre-process-key-for-get post-process-value-for-get pre-process-key-and-value-for-put)
 
 
 
-(defrecord LmdbRec [cmd-chan dbi key-serde kvs-ctx max-key-size pre-del-hook-fn pre-get-hook-fn pre-put-hook-fn val-serde]
+(defrecord LmdbRec [cmd-chan dbi key-serde kvs-ctx max-key-size pre-del-hook-fn pre-get-hook-fn post-get-hook-fn pre-put-hook-fn val-serde]
   proto/KVStoreDbiApi
   (start [kvs-db]
     (log/info "[kv-store](LmdbRec) Starting KV-Store Service.")
@@ -54,7 +54,7 @@
             (when (= (mod c 100) 0)
               (log/debug "[kv-store](LmdbRec) Listening in go loop."))
             (let [{:keys [ack-chan cmd key value k-serde v-serde]} (<! @cmd-chan)
-                  [key value] (case cmd 
+                  [key value] (case cmd
                                 :put    (pre-process-key-and-value-for-put key value @pre-put-hook-fn)
                                 :delete (pre-process-key-for-del           key @pre-del-hook-fn))
                   ks      (or k-serde @key-serde)
@@ -97,7 +97,7 @@
 
   (set-pre-put-hook [kvs-db pre-fn]
     (reset! (:pre-put-hook-fn kvs-db) pre-fn)
-    kvs-db)
+    kvs-db) 
 
   (kv-put [kvs-db key value]
     (log/debugf "[kv-put](LmdbRec) Putting key: %s with value: %s" key value)
@@ -163,8 +163,15 @@
       (let [key-buf    (proto/serialize @key-serde (pre-process-key-for-get key @pre-get-hook-fn))
             found      (.get dbi txn key-buf)]
         (if (some? found)
-          (proto/deserialize @val-serde found)
-          nil))))
+          (post-process-value-for-get key (proto/deserialize @val-serde found) @post-get-hook-fn)
+          (let [transformed (post-process-value-for-get key nil @post-get-hook-fn)] 
+            (if (some? transformed)
+              transformed
+              nil))))))
+
+  (set-post-get-hook [kvs-db post-get-fn]
+    (reset! (:post-get-hook-fn kvs-db) post-get-fn)
+    kvs-db)
 
   (kv-get [kvs-db key k-serde v-serde]
     (log/debugf "[kv-get](LmdbRec) Retrieving key %s from KV-Store with provided SerDes." key)
@@ -204,6 +211,17 @@
                           {:cause #{:invalid-response-from-pre-get-hook-fn}}))
           transformed-key))
       key)))
+
+(defn- post-process-value-for-get [key value post-get-hook-fn]
+  (log/debugf "[post-process-value-for-get] value: %s" value)
+  (log/debugf "[post-process-value-for-get] post-get-hook-fn type: %s" (type post-get-hook-fn))
+  (let [post-get-fn (if (some? post-get-hook-fn)
+                      post-get-hook-fn
+                      nil)]
+    (if (some? post-get-fn)
+      (post-get-fn key value)
+      value)))
+
 
 (defn- pre-process-key-for-del [key pre-del-hook-fn]
   (log/debugf "[pre-process-key-for-del] key: %s" key)
@@ -266,15 +284,15 @@
 (defrecord LmdbContext [kvs-ctx db-instances]
   KVStoreDbContextApi
   (db [this db-name]
-    (proto/db this db-name nil nil nil nil nil))
+    (proto/db this db-name nil nil nil nil nil nil))
 
   (db [this db-name chan-opts]
-    (proto/db this db-name chan-opts nil nil nil nil))
+    (proto/db this db-name chan-opts nil nil nil nil nil))
 
   (db [this db-name chan-opts db-opts]
-    (proto/db this db-name chan-opts db-opts nil nil nil))
+    (proto/db this db-name chan-opts db-opts nil nil nil nil))
 
-  (db [this db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn pre-put-hook-fn]
+  (db [this db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn post-get-hook-fn pre-put-hook-fn]
     (let [max-key-size (.getMaxKeySize (:ctx kvs-ctx))
           dbi (if (contains? @(:db-instances this) db-name)
                 (get @(:db-instances this) db-name)
@@ -288,6 +306,7 @@
                                                :max-key-size    max-key-size
                                                :pre-del-hook-fn (atom pre-del-hook-fn)
                                                :pre-get-hook-fn (atom pre-get-hook-fn)
+                                               :post-get-hook-fn (atom post-get-hook-fn)
                                                :pre-put-hook-fn (atom pre-put-hook-fn)
                                                :val-serde       (atom (serde/string-serde))})
                       _         (log/debug "[db] Starting Database Instance")
@@ -378,14 +397,14 @@
   ;; LMDB always needs and Env. An Env owns a physical on-disk storage file.
   ;; One Env can store multiple databases (e.g. - sorted maps)
   (def env ^Env (-> (Env/create)
-               ;; LMDB needs to know how large our DB may become. Over-estimating is OK
-               ;; This sets the map size in bytes
+                    ;; LMDB needs to know how large our DB may become. Over-estimating is OK
+                    ;; This sets the map size in bytes
                     (.setMapSize map-size)
-               ;; LMDB needs to know how many DBs (Dbi) we want to store in this Env
+                    ;; LMDB needs to know how many DBs (Dbi) we want to store in this Env
                     (.setMaxDbs dbs)
-               ;; Open the Env. The same path can be concurrently opened and used in 
-               ;; different processes, but do not open the same path twice in the same 
-               ;; process at the same time.
+                    ;; Open the Env. The same path can be concurrently opened and used in 
+                    ;; different processes, but do not open the same path twice in the same 
+                    ;; process at the same time.
                     (.open path env-flags)))
   (def customer-db "customers")
   ;; We need a Dbi for each DB. A Dbi roughly equates to a sorted map. The

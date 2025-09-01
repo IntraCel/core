@@ -74,9 +74,9 @@ to use the component."
   ([kvs-db-ctx db-name chan-opts]
    (db kvs-db-ctx db-name chan-opts nil))
   ([kvs-db-ctx db-name chan-opts db-opts]
-   (db kvs-db-ctx db-name chan-opts db-opts nil nil nil))
-  ([kvs-db-ctx db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn pre-put-hook-fn]
-   (proto/db kvs-db-ctx db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn pre-put-hook-fn)))
+   (db kvs-db-ctx db-name chan-opts db-opts nil nil nil nil))
+  ([kvs-db-ctx db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn post-get-hook-fn pre-put-hook-fn]
+   (proto/db kvs-db-ctx db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn post-get-hook-fn pre-put-hook-fn)))
 
 (defn set-key-serde
   "Sets the default key SerDe used for serializing and deserializing to and from the database. See [[clj.intracel.api.kv-store/KVStoreDb]].
@@ -112,12 +112,13 @@ Depends on: [[db]]."
   ([^KVStoreDbiApi kvs-db key value ^KVSerde key-serde ^KVSerde val-serde]
    (proto/kv-put-async kvs-db key value key-serde val-serde)))
 
-(defn set-pre-put-hook 
+(defn set-pre-put-hook
   "This enables the caller to customize the behavior performed when writing a key/value paire in [[kv-put]] or [[kv-put-async]] by allowing caller code to pre-process the key and value. See [[clj.intracel.api.kv-store/KVStoreDb]].
   
   Depends on: [[db]]"
   [^KVStoreDbiApi kvs-db pre-fn]
   (proto/set-pre-put-hook kvs-db pre-fn))
+
 (defn set-pre-get-hook
   "This enables the caller to customize the behavior performed when doing a key look-up in [[kv-get]] by allowing caller code to pre-process the key. See [[clj.intracel.api.kv-store/KVStoreDb]].
 
@@ -125,7 +126,13 @@ Depends on: [[db]]"
   [^KVStoreDbiApi kvs-db pre-fn]
   (proto/set-pre-get-hook kvs-db pre-fn))
 
-(defn set-pre-del-hook 
+(defn set-post-get-hook 
+  "This enables the caller to customize the value returned when doing a key look-up in [[kv-get]] by allowing caller code to post-process the value returned. See [[clj.intracel.api.kv-store/KVStoreDb]].
+  Depends on: [[db]]"
+  [^KVStoreDbiApi kvs-db post-fn]
+  (proto/set-post-get-hook kvs-db post-fn))
+
+(defn set-pre-del-hook
   "This enables the caller to customize the behavior performed when doing a key removal in [[kv-del]] by allowing caller code to pre-process the key. See [[clj.intracel.api.kv-store/KVStoreDb]].
   
   Depends on: [[db]]"
