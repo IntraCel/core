@@ -146,16 +146,17 @@
 
   (set-pre-put-hook [kvs-db pre-fn]
     "This enables the caller to customize the behavior performed when writing a key/value pair in [[kv-put]] and [[kv-put-async]] by allowing caller code to pre-process the key and value.
-      This could be useful for performing transformations on the key and value or sending a copy of the data to something else.
+    This could be useful for performing transformations on the key and value or sending a copy of the data to something else.
       
-      Depends on: [[db]] 
-      | Parameter   | Description |
-      | ------------|-------------|
-      | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
-      | `pre-fn`    | A function that accepts a `key` arg, and a `value` arg and returns a new `key` and a new `value` in a two element vector that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-put]] and [[kv-put-async]] functions. |
+    Depends on: [[db]] 
+     
+    | Parameter   | Description |
+    | ------------|-------------|
+    | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
+    | `pre-fn`    | A function that accepts a `key` arg, and a `value` arg and returns a new `key` and a new `value` in a two element vector that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-put]] and [[kv-put-async]] functions. |
   
-      Returns:
-      A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern.")
+    Returns:
+    A `clj.intracel.api.protocols/KVStoreDbiApi` that can be used in a builder pattern.")
 
   (kv-put
     [kvs-db key value]
@@ -166,6 +167,7 @@
     It's the caller's responsibility to use the mutli-arity [[kv-get]] function to ensure that the key and value get deserizlized properly.
 
     Depends on: [[db]] 
+     
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
@@ -173,6 +175,7 @@
     | `value`     | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serailize the `value` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
     | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]. Not available in 3 parameter version of this function.|
     | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in 3 parameter version of this function.|
+    
     Returns:
     A map containing the key `written?` set to true or false. If false, use the `msg` key to check the error message.")
   (kv-put-async
@@ -184,6 +187,7 @@
     It's the caller's responsibility to use the mutli-arity [[kv-get]] function to ensure that the key and value get deserizlized properly.
   
     Depends on: [[db]] 
+     
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
@@ -191,6 +195,7 @@
     | `value`     | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serailize the `value` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
     | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]. Not available in 3 parameter version of this function.|
     | `val-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api-kv-store/KVSerde` provided in [[set-val-serde]]. Not available in 3 parameter version of this function.|
+    
     Returns:
     A core.async channel that consumers can use to listen for acknowledgements. A response will be a map containing the `written?` set to true or false. If false, use the `msg` key to check the error message.")
 
@@ -200,6 +205,7 @@
     Potentially, this could also defer to a pre-key processor that checks a specialized in-memory data struction like a Bloom Filter.
     
     Depends on: [[db]] 
+    
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
@@ -216,6 +222,7 @@
      The 4 parameter version of [[kv-get]] allows the caller to supply a specific `clj.intracel.api.kv-store/KVSerde` to serialize the key properly on look-up and deserialize the key and value properly on retrieval.
 
     Depends on: [[db]] 
+    
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
