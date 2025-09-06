@@ -1,7 +1,7 @@
 (ns clj.intracel.kv-store.interface
   "The `clj.intracel.kv-store.interface` namespace defines polylith a interface for the KV-Store. 
-Generally, this is the namespace users of the KV-Store will put in their [[require]] statement 
-to use the component."
+  Generally, this is the namespace users of the KV-Store will put in their [[require]] statement 
+  to use the component."
   (:require [clj.intracel.api.interface.protocols :as proto]
             [clj.intracel.kv-store.lmdb :as lmdb]
             [taoensso.timbre :as log])
@@ -13,6 +13,7 @@ to use the component."
 
 (defn create-kv-store-context
   "Starts up the KV-Store context which hosts the embedded database.
+  
   | Parameter   | Description |
   | ------------|-------------|
   | `ctx-opts`  | Map containing options to adjust the behavior of the environment at start-up.|
@@ -126,7 +127,7 @@ Depends on: [[db]]"
   [^KVStoreDbiApi kvs-db pre-fn]
   (proto/set-pre-get-hook kvs-db pre-fn))
 
-(defn set-post-get-hook 
+(defn set-post-get-hook
   "This enables the caller to customize the value returned when doing a key look-up in [[kv-get]] by allowing caller code to post-process the value returned. See [[clj.intracel.api.kv-store/KVStoreDb]].
   Depends on: [[db]]"
   [^KVStoreDbiApi kvs-db post-fn]

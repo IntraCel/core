@@ -127,6 +127,9 @@
 
 (defn serde-type 
   "Returns the keyword type of the serde provided.
+  
+  Depends on: An instance of [[clj.intracel.api.interface.protocols/KVSerde]]
+   
   | Parameter | Description |
   | --------- |-------------|
   | `serde`   | A valid instance of a `clj.intracel.api.protocols/KVSerde` |

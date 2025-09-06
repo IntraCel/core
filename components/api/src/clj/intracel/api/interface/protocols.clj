@@ -42,13 +42,13 @@
     [kvs-db db-name chan-opts db-opts]
     [kvs-db db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn post-get-hook-fn pre-put-hook-fn]
     "Returns a hosted embedded database that implements the [[clj.intracel.api.interface.protocols/KVStoreDbiApi]]. 
-     All multi-arity versions of the kvs-db reference and the db-name.
-     The 3-arity version allows the caller to customize the settings of the underlying channel used for writing to the database. 
-     This can be a key setting to tune when a high volume of data is being processed. 
-     The 4-arity version allows the caller to customize the settings of the underlying KV-Store.
-     the 5-arity version allows the caller to set a function the hooks into the lifecyle of a get operation allowing the library to 
-     pre-process the key provided before doing the actual lookup.
-      
+    All multi-arity versions of the kvs-db reference and the db-name.
+    The 3-arity version allows the caller to customize the settings of the underlying channel used for writing to the database. 
+    This can be a key setting to tune when a high volume of data is being processed. 
+    The 4-arity version allows the caller to customize the settings of the underlying KV-Store.
+    the 5-arity version allows the caller to set a function the hooks into the lifecyle of a get operation allowing the library to 
+    pre-process the key provided before doing the actual lookup.
+
     | Parameter          | Description |
     | -------------------|-------------|
     | `kvs-db`           | A reference to the `clj.intracel.api.kv-store/KVStoreDb` created at initialization. |
@@ -106,6 +106,7 @@
      Any start-up logic or state that needs to be initialized would be set up in this function.
     
     Depends on: [[db]] 
+     
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
@@ -117,6 +118,7 @@
      Any shut down logic or state that needs to be stopped would be done here.
         
     Depends on: [[db]] 
+     
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
@@ -127,6 +129,7 @@
     "Sets the default key SerDe used for serializing to and deserializing from a [[clj.intracel.api.protocols/KVStoreDbiApi]]
 
     Depends on: [[db]] 
+     
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
@@ -137,6 +140,7 @@
     "Sets the default value SerDe used for serializing to and deserializing from a [[clj.intracel.api.protocols/KVStoreDbiApi]]
 
     Depends on: [[db]] 
+    
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
@@ -238,6 +242,7 @@
     This could be useful for performing transformations on the value before returning it to the caller.
     
     Depends on: [[db]] 
+     
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
@@ -252,6 +257,7 @@
     database that could be removed to perform proper clean-up.
     
     Depends on: [[db]] 
+     
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
@@ -268,6 +274,7 @@
      The 3 parameter version of [[kv-del]] allows the caller to supply a specific `clj.intracel.api.kv-store/KVSerde` to serialize the key properly on look-up.
   
     Depends on: [[db]] 
+     
     | Parameter   | Description |
     | ------------|-------------|
     | `kvs-db`    | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
@@ -300,7 +307,8 @@
      [[clj.intracel.api.interface.protocols/SQLStoreContext]] reference in a field called `sql-ctx`. 
      This constructor enables multiple implementations for different embedded SQL-Stores.
      
-     Depends on:  
+     Depends on:  [[sql-db-ctx]]
+
      | Parameter    | Description |
      | -------------|-------------|
      | `sql-db-ctx` | A reference to the `clj.intracel.api.interface.protocols/SQLStoreDbContextApi` created at initialization. ||
@@ -314,6 +322,7 @@
      Call the `create-sql-db` to create this reference before calling this function.
       
     Depends on: [[sql-db]] 
+     
     | Parameter    | Description |
     | -------------|-------------|
     | `sql-db`     | A reference to the `clj.intracel.api.interface.protocols/SQLStoreApi` created record. |
