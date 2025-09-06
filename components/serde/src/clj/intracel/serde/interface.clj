@@ -22,8 +22,7 @@
             [clj.intracel.serde.nippy-serde :as nippy-serde]
             [clj.intracel.serde.short-serde :as short-serde]
             [clj.intracel.serde.string-serde :as string-serde]
-            [clj.intracel.serde.uint-128-serde :as u128-int-serde]
-            [clj.intracel.serde.interface :as serde]
+            [clj.intracel.serde.uint-128-serde :as u128-int-serde] 
             [clj.intracel.api.interface.protocols :as proto :refer [KVSerde]]))
 
 (defn big-decimal-serde
@@ -136,6 +135,6 @@
   [serde] 
   (if (and (some? serde)
            (satisfies? KVSerde serde))
-    (serde/serde-type serde)
+    (proto/serde-type serde)
     (throw (ex-info "[serde-type] Invalid argument provided. Must provide a valid instance of a clj.intracel.api.protocols/KVSerde."
                     {:cause #{:invalid-argument}}))))

@@ -233,3 +233,30 @@
           u128-serde (serde/u128-int-serde)]
       (is (thrown? clojure.lang.ExceptionInfo (proto/serialize u128-serde neg))))))
 
+(deftest test-serde-type
+  (testing "When a valid serde is provided that it returns the correct keyword type."
+    (let [big-dec-serde (serde/big-decimal-serde)
+          big-int-serde (serde/big-int-serde)
+          byte-serde    (serde/byte-serde)
+          double-serde  (serde/double-serde)
+          float-serde   (serde/float-serde)
+          int-serde     (serde/int-serde)
+          long-serde    (serde/long-serde)
+          nippy-serde   (serde/nippy-serde)
+          short-serde   (serde/short-serde)
+          string-serde  (serde/string-serde)
+          u128-serde    (serde/u128-int-serde)]
+      (is (= :big-decimal (serde/serde-type big-dec-serde)))
+      (is (= :big-int     (serde/serde-type big-int-serde)))
+      (is (= :byte        (serde/serde-type byte-serde)))
+      (is (= :double      (serde/serde-type double-serde)))
+      (is (= :float       (serde/serde-type float-serde)))
+      (is (= :int         (serde/serde-type int-serde)))
+      (is (= :long        (serde/serde-type long-serde)))
+      (is (= :nippy       (serde/serde-type nippy-serde)))
+      (is (= :short       (serde/serde-type short-serde)))
+      (is (= :string      (serde/serde-type string-serde)))
+      (is (= :uint-128    (serde/serde-type u128-serde)))
+      )))
+
+
