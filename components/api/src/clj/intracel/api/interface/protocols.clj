@@ -5,6 +5,7 @@
 (defprotocol KVSerde
   (serialize [kv-serde data]
     "Accepts data and produces a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html)
+     
     | Parameter   | Description |
     | ------------|-------------|
     | `kv-serde`  | A reference to implementation of the `clj.intracel.api.interface.protocols/KVSerde` to perform the serialization. |
@@ -12,6 +13,7 @@
     Returns: `java.nio.ByteBuffer` to be persisted into the KV-Store. A failed attempt to serialize should result in a `clojure.lang.ExceptionInfo`")
   (deserialize [kv-serde data]
     "Accepts a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html) and produces it into the desired Clojure data format (e.g. - String, Map, Avro, etc.).
+    
     | Parameter   | Description |
     | ------------|-------------|
     | `kv-serde`  | A reference to implementation of the `clj.intracel.api..interface.protocols/KVSerde` to perform the serialization. |
@@ -20,6 +22,7 @@
     Data converted from a `java.nio.ByteBuffer` coming from the KV-Store into the desired Clojure data format. A failed attempt to deserialize should result in a `clojure.lang.ExceptionInfo`")
   (serde-type [kv-serde]
     "Returns a keyword that identifies the type of SerDe this is.
+    
     | Parameter   | Description |
     | ------------|-------------|
     | `kv-serde`  | A reference to implementation of the `clj.intracel.api.interface.protocols/KVSerde` to perform the serialization. |
