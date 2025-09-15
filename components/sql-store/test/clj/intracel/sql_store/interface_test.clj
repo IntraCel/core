@@ -2,7 +2,8 @@
   (:require [clojure.test :as test :refer :all]
             [clj.intracel.sql-store.interface :as sql-store]
             [next.jdbc :as jdbc])
-  (:import [java.sql DriverManager]))
+  (:import [java.sql DriverManager]
+           [java.util UUID]))
 
 (deftest dummy-test
   (is (= 1 1)))
@@ -10,7 +11,7 @@
 (deftest test-sql-store-context-duckdb
   (testing "when connection pool is created with DuckDB that it's set up correctly."
     (with-open [sql-ctx (sql-store/create-sql-store-context {:intracel.sql-store/type :duckdb
-                                                             :intracel.sql-store.duckdb/storage-path (str (System/getProperty "java.io.tmpdir") "/duckdb")})]
+                                                             :intracel.sql-store.duckdb/storage-path (str (System/getProperty "java.io.tmpdir") "/" (UUID/randomUUID) "/duckdb")})]
       (is (not (nil? sql-ctx)))
       (is (contains? sql-ctx :ctx))
       (let [ctx (:ctx sql-ctx)]
@@ -23,7 +24,7 @@
 
 (deftest test-context-can-create-db-instance
   (try (with-open [sql-ctx (sql-store/create-sql-store-context {:intracel.sql-store/type :duckdb
-                                                                :intracel.sql-store.duckdb/storage-path (str (System/getProperty "java.io.tmpdir") "/duckdb")})]
+                                                                :intracel.sql-store.duckdb/storage-path (str (System/getProperty "java.io.tmpdir") "/" (UUID/randomUUID) "/duckdb")})]
          (is (not (nil? sql-ctx)))
          (let [sql-store-db-ctx (sql-store/create-sql-store-db-context sql-ctx :duckdb)]
            (is (not (nil? sql-store-db-ctx)))
@@ -36,7 +37,7 @@
 
 (deftest test-bulk-loading
   (with-open [sql-ctx (sql-store/create-sql-store-context {:intracel.sql-store/type :duckdb
-                                                           :intracel.sql-store.duckdb/storage-path (str (System/getProperty "java.io.tmpdir") "/duckdb-appender")})]
+                                                           :intracel.sql-store.duckdb/storage-path (str (System/getProperty "java.io.tmpdir") "/" (UUID/randomUUID) "/duckdb-appender")})]
     (let [sql-store-db-ctx (sql-store/create-sql-store-db-context sql-ctx :duckdb)
           db               (sql-store/db sql-store-db-ctx)
           pool-ds          (get-in db [:sql-ctx :ctx :pool])
@@ -75,8 +76,8 @@
                   (prn "failed to list tables:" (.getMessage ex))))
            (catch Exception ex
              (prn "failed to create table:" (.getMessage ex))))
-      (let [results (sql-store/bulk-load db "intracel.movies" [["Star Wars Episode V: The Empire Strikes Back" 1977 93.0]
-                                                               ["Ghostbusters" 1984 95.0]
-                                                               ["Inception" 2010 87.0]])]
+      (let [results (sql-store/bulk-load db "intracel.movies" [["Star Wars Episode V: The Empire Strikes Back" (int 1977) (float 93.0)]
+                                                               ["Ghostbusters" (int 1984) (float 95.0)]
+                                                               ["Inception" (int 2010) (float 87.0)]])]
         (prn "results:" results)
         (is (true? (:loaded? results)))))))
