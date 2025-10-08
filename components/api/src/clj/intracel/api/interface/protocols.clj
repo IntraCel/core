@@ -37,10 +37,10 @@
 
 (defprotocol KVStoreDbContextApi
   (db
-    [kvs-db db-name]
-    [kvs-db db-name chan-opts]
-    [kvs-db db-name chan-opts db-opts]
-    [kvs-db db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn post-get-hook-fn pre-put-hook-fn]
+    [kvs-db-ctx db-name]
+    [kvs-db-ctx db-name chan-opts]
+    [kvs-db-ctx db-name chan-opts db-opts]
+    [kvs-db-ctx db-name chan-opts db-opts pre-del-hook-fn pre-get-hook-fn post-get-hook-fn pre-put-hook-fn]
     "Returns a hosted embedded database that implements the [[clj.intracel.api.interface.protocols/KVStoreDbiApi]]. 
     All multi-arity versions of the kvs-db reference and the db-name.
     The 3-arity version allows the caller to customize the settings of the underlying channel used for writing to the database. 
@@ -51,7 +51,7 @@
 
     | Parameter          | Description |
     | -------------------|-------------|
-    | `kvs-db`           | A reference to the `clj.intracel.api.kv-store/KVStoreDb` created at initialization. |
+    | `kvs-db-ctx`       | A reference to the `clj.intracel.api.kv-store/KVStoreDb` created at initialization. |
     | `chan-opts`        | A map containing options for setting internal communications. To protect access to the database, 
     |                    | KV-Store uses a multi-producer, single-consumer core.async channel pattern so that a single thread safely performs puts to the database. 
     |                    | This allows the user to override the default `(chan (buffer 10000))` to any type of channel desired.
@@ -98,7 +98,7 @@
     | `post-get-hook-fn` | A function that accepts the value returned from the [[kv-get]] function and processes it before returning a transformed value. |
     | `pre-put-hook-fn`  | A function that accepts a `key` arg, and a `value` arg and returns a new `key` and `value` in a two-element vector that will get serialized by the [[clj.intracel.api.kv-store/KVSerde]] used in the [[kv-get]] function. |
     Returns:
-    An `clj.intracel.api.kv-store/KVStoreDb` that can be used in a builder pattern to compose a KV-Store database instance with the desired settings."))
+    A `clj.intracel.api.kv-store/KVStoreDb` that can be used in a builder pattern to compose a KV-Store database instance with the desired settings."))
 
 (defprotocol KVStoreDbiApi
   (start [kvs-db]
@@ -281,7 +281,19 @@
     | `key`       | Uses the default [[clj.intracel.api.kv-store/KVSerde]] to serialize the `key` to a [java.nio.ByteBuffer](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/ByteBuffer.html). |
     | `key-serde` | An implemenation of the [[clj.intracel.api.kv-store/KVSerde]]. If nil, defaults to a [[clj.intracel.serde.interface.string-serde]]. This overrides the `clj.intracel.api.kv-store/KVSerde` provided in [[set-key-serde]]||
     Returns:
-    A map containing the key `deleted?` set to true or false. If false, use the `msg` key to check the error message."))
+    A map containing the key `deleted?` set to true or false. If false, use the `msg` key to check the error message.")
+  
+  (kv-drop
+   [kvs-db full-delete?]
+   "Drops the data in the h0osted embedded database instance.
+  
+   | Parameter          | Description |
+   | -------------------|-------------|
+   | `kvs-db`           | A reference to the `clj.intracel.api.protocols/KVStoreDbiApi` created in the [[db]] function. |
+   | `full-delete?`     | If true, the database will be fully deleted from disk. If false, the database will be emptied of all data but the database instance itself will remain. |
+       
+   Returns:
+   A map containing the key `dropped?` set to true or false. If false, use the `msg` key to check the error message."))
 
 ;; The next.jdbc library from Sean Corefield supports the DuckDB driver.
 ;; The library puts the driver into a connection pool which is perfect 

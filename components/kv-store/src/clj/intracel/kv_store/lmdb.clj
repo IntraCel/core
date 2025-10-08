@@ -53,26 +53,38 @@
           (loop [c 0]
             (when (= (mod c 100) 0)
               (log/debug "[kv-store](LmdbRec) Listening in go loop."))
-            (let [{:keys [ack-chan cmd key value k-serde v-serde]} (<! @cmd-chan)
+            (let [{:keys [ack-chan cmd full-delete? key value k-serde v-serde]} (<! @cmd-chan)
                   [key value] (case cmd
                                 :put    (pre-process-key-and-value-for-put key value @pre-put-hook-fn)
-                                :delete (pre-process-key-for-del           key @pre-del-hook-fn))
+                                :delete (pre-process-key-for-del           key @pre-del-hook-fn)
+                                :drop   ["" ""])
                   ks      (or k-serde @key-serde)
                   vs      (or v-serde @val-serde)
                   _       (log/debugf "[kv-store](LmdbRec) Serializing key: %s, val: %s" key value)
                   key-buf (proto/serialize ks key)
                   val-buf (proto/serialize vs value)]
               (with-open [txn ^Txn (.txnWrite  (:ctx kvs-ctx))]
-                (case cmd
-                  :put    (do
-                            (.put dbi txn key-buf val-buf (make-array PutFlags 1))
-                            (log/debugf "[kv-put](LmdbRec) put call made for key: %s, awaiting completion of transaction." key))
-                  :delete (do
-                            (.delete dbi txn key-buf)
-                            (log/debugf "[kv-delete](LmdbRec) delete call made for key: %s, awating completion of transaction." key)))
-                (.commit txn)
-                (when (some? ack-chan)
-                  (>! ack-chan {:key key :written? true}))
+                (let [res (case cmd
+                            :put    (do
+                                      (.put dbi txn key-buf val-buf (make-array PutFlags 1))
+                                      (log/debugf "[kv-put](LmdbRec) put call made for key: %s, awaiting completion of transaction." key)
+                                      {:key key :written? true})
+                            :delete (do
+                                      (.delete dbi txn key-buf)
+                                      (log/debugf "[kv-delete](LmdbRec) delete call made for key: %s, awating completion of transaction." key)
+                                      {:key key :written? true})
+                            :drop   (if full-delete?
+                                      (do
+                                        (log/debugf "[kv-drop](LmdbRec) Dropping database instance and removing data from disk.")
+                                        (.drop dbi txn true)
+                                        {:dropped? true})
+                                      (do
+                                        (log/debugf "[kv-drop](LmdbRec) Dropping database instance but retaining data on disk.")
+                                        (.drop dbi txn)
+                                        {:dropped? true})))]
+                  (.commit txn)
+                  (when (some? ack-chan)
+                    (>! ack-chan res)))
                 (log/debugf "[kv-store](LmdbRec) Committed key %s to KV-Store." key)))
             (recur (inc c))))
         (log/info "[kv-store](LmdbRec) KV-Store Service started.")
@@ -97,7 +109,7 @@
 
   (set-pre-put-hook [kvs-db pre-fn]
     (reset! (:pre-put-hook-fn kvs-db) pre-fn)
-    kvs-db) 
+    kvs-db)
 
   (kv-put [kvs-db key value]
     (log/debugf "[kv-put](LmdbRec) Putting key: %s with value: %s" key value)
@@ -164,7 +176,7 @@
             found      (.get dbi txn key-buf)]
         (if (some? found)
           (post-process-value-for-get key (proto/deserialize @val-serde found) @post-get-hook-fn)
-          (let [transformed (post-process-value-for-get key nil @post-get-hook-fn)] 
+          (let [transformed (post-process-value-for-get key nil @post-get-hook-fn)]
             (if (some? transformed)
               transformed
               nil))))))
@@ -196,7 +208,18 @@
     (let [ks (or k-serde (:key-serde kvs-db))]
       (go (>! @cmd-chan {:cmd    :delete
                          :key     key
-                         :k-serde ks})))))
+                         :k-serde ks}))))
+  (kv-drop
+    [kvs-db full-delete?]
+    (log/debugf "[kv-drop](LmdbRec) Dropping database instance")
+    (let [one-shot-ack-chan (chan 1)]
+      (go (log/debug "[kv-drop](LmdbRec) Using go block to send drop request over command channel.")
+          (>! @cmd-chan {:ack-chan     one-shot-ack-chan
+                         :cmd          :drop
+                         :full-delete? full-delete?}))
+      (let [res (<!! one-shot-ack-chan)]
+        (log/debugf "[kv-put](LmdbRec) Received acknowledgement of dabase instance drop. Outcome: %s" res)
+        res))))
 
 (defn- pre-process-key-for-get [key pre-get-hook-fn]
   (log/debugf "[pre-process-key-for-get] key: %s" key)
@@ -251,7 +274,6 @@
                           {:cause #{:invalid-response-from-pre-put-hook-fn}}))
           [transformed-key transformed-value]))
       [key value])))
-
 
 (defn create-kv-store-context [{:keys [intracel.kv-store.lmdb/storage-path
                                        intracel.kv-store.lmdb/keyspace-max-mem-size

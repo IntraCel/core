@@ -157,3 +157,11 @@ Depends on: [[db]]"
    (proto/kv-del kvs-db key))
   ([^KVStoreDbiApi kvs-db key ^KVSerde key-serde]
    (proto/kv-del kvs-db key key-serde)))
+
+
+(defn kv-drop 
+  "Drops the database instance. If `full-delete?` is true, the data will be removed from disk as well. See [[clj.intracel.api.kv-store/KVStoreDb]].
+   
+  Depends on: [[db]]"
+  [^KVStoreDbiApi kvs-db full-delete?]
+  (proto/kv-drop kvs-db full-delete?))
