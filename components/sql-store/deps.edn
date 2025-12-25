@@ -2,6 +2,6 @@
  :deps {com.github.seancorfield/next.jdbc {:mvn/version "1.3.981"}
         com.zaxxer/HikariCP               {:mvn/version "6.2.1"}
         ;;Ducklake 0.2 spec support
-        org.duckdb/duckdb_jdbc            {:mvn/version "1.3.2.1"}}
+        org.duckdb/duckdb_jdbc            {:mvn/version "1.4.3.0"}}
  :aliases {:test {:extra-paths ["test"]
                   :extra-deps {}}}}
